@@ -1,4 +1,4 @@
-#!/usr/bin/env node --es_staging
+#!/usr/bin/env node 
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import cli from '../lib/cli.js';

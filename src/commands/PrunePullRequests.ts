@@ -4,19 +4,37 @@ import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import ProgressBar from "progress";
 import { PullRequest, OctokitPlus } from "../OctokitPlus.js";
 import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch.js";
+import { getGitRemote } from "../utils/getGitRemote.js";
 
 export const prunePullRequestsCommand: CommandModule = {
   handler: async (args: any) => {
+    let owner: string;
+    let repo: string;
+
+    if (args.repo) {
+      // Use provided repo
+      owner = args.repo.owner;
+      repo = args.repo.repo;
+    } else {
+      // Try to get from git remote
+      const gitRemote = getGitRemote();
+      if (!gitRemote) {
+        throw new Error("No repo specified and unable to detect from git remote. Please run from a git repository or specify owner/repo.");
+      }
+      owner = gitRemote.owner;
+      repo = gitRemote.repo;
+    }
+
     const prunePullRequest = new PrunePullRequest(
       createOctokitPlus(getConfig()),
       args.dryRun,
-      args.repo.owner,
-      args.repo.repo
+      owner,
+      repo
     );
 
     await prunePullRequest.perform();
   },
-  command: "prunePullRequests [--dry-run] <repo>",
+  command: "prunePullRequests [--dry-run] [repo]",
   describe: "Prunes remote branches that have already been merged",
   builder: yargs =>
     yargs
@@ -24,7 +42,7 @@ export const prunePullRequestsCommand: CommandModule = {
       .boolean("dry-run")
       .positional("repo", {
         type: "string",
-        coerce: s => ({ owner: s.split("/")[0], repo: s.split("/")[1] })
+        coerce: (s: string | undefined) => s ? ({ owner: s.split("/")[0], repo: s.split("/")[1] }) : undefined
       })
 };
 
