@@ -20,17 +20,17 @@ jobs:
         with:
           fetch-depth: 0  # Fetch full history for semantic-release
       
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'  # Will auto-detect pnpm-lock.yaml and use pnpm cache
-      
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
           run_install: false
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
       
       - name: Get pnpm store directory
         shell: bash
@@ -71,17 +71,17 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: latest
           run_install: false
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
       
       - name: Get pnpm store directory
         shell: bash
