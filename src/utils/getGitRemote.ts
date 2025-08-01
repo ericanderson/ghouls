@@ -1,4 +1,5 @@
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
+import which from "which";
 
 export interface GitRemoteInfo {
   owner: string;
@@ -7,8 +8,24 @@ export interface GitRemoteInfo {
 
 export function getGitRemote(): GitRemoteInfo | null {
   try {
+    // Validate that git binary exists
+    const gitPath = which.sync("git", { nothrow: true });
+    if (!gitPath) {
+      return null;
+    }
+
     // Get the remote URL for origin
-    const remoteUrl = execSync("git remote get-url origin", { encoding: "utf8" }).trim();
+    const result = spawnSync(gitPath, ["remote", "get-url", "origin"], {
+      encoding: "utf8",
+      timeout: 5000, // 5 second timeout
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+
+    if (result.error || result.status !== 0) {
+      return null;
+    }
+
+    const remoteUrl = result.stdout.trim();
     
     if (!remoteUrl) {
       return null;

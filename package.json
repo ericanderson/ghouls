@@ -26,6 +26,7 @@
     "progress": "^2.0.3",
     "source-map-support": "^0.5.21",
     "untildify": "^4.0.0",
+    "which": "^5.0.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
@@ -33,6 +34,7 @@
     "@types/node": "^22.17.0",
     "@types/progress": "^2.0.7",
     "@types/source-map-support": "^0.5.10",
+    "@types/which": "^3.0.4",
     "@types/yargs": "^17.0.33",
     "prettier": "^3.6.2",
     "semantic-release": "^24.2.7",

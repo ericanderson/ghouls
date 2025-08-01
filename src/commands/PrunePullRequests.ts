@@ -42,7 +42,31 @@ export const prunePullRequestsCommand: CommandModule = {
       .boolean("dry-run")
       .positional("repo", {
         type: "string",
-        coerce: (s: string | undefined) => s ? ({ owner: s.split("/")[0], repo: s.split("/")[1] }) : undefined
+        coerce: (s: string | undefined) => {
+          if (!s) {
+            return undefined;
+          }
+          
+          // Validate repo string format (owner/repo)
+          const parts = s.split("/");
+          if (parts.length !== 2 || !parts[0] || !parts[1]) {
+            throw new Error("Repository must be in the format 'owner/repo'");
+          }
+          
+          // Validate owner and repo names (GitHub naming rules)
+          const ownerRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
+          const repoRegex = /^[a-zA-Z0-9._-]+$/;
+          
+          if (!ownerRegex.test(parts[0])) {
+            throw new Error("Invalid owner name. Must contain only alphanumeric characters and hyphens, and cannot start or end with a hyphen.");
+          }
+          
+          if (!repoRegex.test(parts[1])) {
+            throw new Error("Invalid repository name. Must contain only alphanumeric characters, dots, underscores, and hyphens.");
+          }
+          
+          return { owner: parts[0], repo: parts[1] };
+        }
       })
 };
 
