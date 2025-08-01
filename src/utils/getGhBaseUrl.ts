@@ -1,28 +1,16 @@
-import { spawnSync } from "child_process";
-import which from "which";
+import { execaSync } from "execa";
 
 export function getGhBaseUrl(): string {
   try {
-    // Validate that gh binary exists
-    const ghPath = which.sync("gh", { nothrow: true });
-    if (!ghPath) {
-      return "https://api.github.com";
-    }
-
     // Check if gh is authenticated to any hosts
     // Note: gh auth status outputs to stderr, not stdout
-    const result = spawnSync(ghPath, ["auth", "status"], {
-      encoding: "utf8",
+    const { stderr, stdout } = execaSync("gh", ["auth", "status"], {
       timeout: 10000, // 10 second timeout
-      stdio: ["ignore", "pipe", "pipe"]
+      reject: false
     });
 
-    if (result.error) {
-      return "https://api.github.com";
-    }
-
     // gh auth status outputs to stderr, so check both stdout and stderr
-    const hostsOutput = result.stderr || result.stdout || "";
+    const hostsOutput = stderr || stdout || "";
     
     // Extract the host from the output (looking for lines like "github.com" or custom enterprise hosts)
     // Look for patterns like "✓ Logged in to github.com" or similar

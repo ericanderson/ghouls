@@ -23,10 +23,10 @@
   "dependencies": {
     "@octokit/rest": "^20.1.2",
     "convict": "^6.2.4",
+    "execa": "^9.6.0",
     "progress": "^2.0.3",
     "source-map-support": "^0.5.21",
     "untildify": "^4.0.0",
-    "which": "^5.0.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {

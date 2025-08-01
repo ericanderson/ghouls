@@ -1,25 +1,13 @@
-import { spawnSync } from "child_process";
-import which from "which";
+import { execaSync } from "execa";
 
 export function getGhUsername(): string | null {
   try {
-    // Validate that gh binary exists
-    const ghPath = which.sync("gh", { nothrow: true });
-    if (!ghPath) {
-      return null;
-    }
-
-    const result = spawnSync(ghPath, ["api", "user", "--jq", ".login"], {
-      encoding: "utf8",
+    const { stdout } = execaSync("gh", ["api", "user", "--jq", ".login"], {
       timeout: 10000, // 10 second timeout
-      stdio: ["ignore", "pipe", "pipe"]
+      reject: false
     });
 
-    if (result.error || result.status !== 0) {
-      return null;
-    }
-
-    const username = result.stdout.trim();
+    const username = stdout?.trim();
     return username || null;
   } catch (error) {
     return null;
