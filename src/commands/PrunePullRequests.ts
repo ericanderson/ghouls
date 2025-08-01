@@ -5,16 +5,8 @@ import ProgressBar from "progress";
 import { PullRequest, OctokitPlus } from "../OctokitPlus";
 import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch";
 
-interface Args {
-  dryRun: boolean;
-  repo: {
-    owner: string;
-    repo: string;
-  };
-}
-
 export const prunePullRequestsCommand: CommandModule = {
-  handler: async (args: Args) => {
+  handler: async (args: any) => {
     const prunePullRequest = new PrunePullRequest(
       createOctokitPlus(getConfig()),
       args.dryRun,

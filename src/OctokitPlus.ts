@@ -1,4 +1,4 @@
-import Octokit from "@octokit/rest";
+import { Octokit } from "@octokit/rest";
 
 export interface PullRequestReference {
   label: string;
@@ -55,8 +55,8 @@ export class OctokitPlus {
       throw new Error("No repo!");
     }
 
-    const ref = await this.octokit.gitdata
-      .getReference({
+    const ref = await this.octokit.rest.git
+      .getRef({
         repo: prRef.repo.name,
         owner: prRef.repo.owner.login,
         ref: `heads/${prRef.ref}`
@@ -75,34 +75,22 @@ export class OctokitPlus {
     if (!prRef.repo) {
       throw new Error("No repo!");
     }
-    return this.octokit.gitdata.deleteReference({
+    return this.octokit.rest.git.deleteRef({
       owner: prRef.repo.owner.login,
       repo: prRef.repo.name,
       ref: `heads/${prRef.ref}`
     });
   }
 
-  public getPullRequests(opts: Octokit.PullRequestsGetAllParams) {
-    return createAsyncIterator<PullRequest>(
-      this.octokit,
-      this.octokit.pullRequests.getAll(opts)
-    );
-  }
-}
-
-export async function* createAsyncIterator<T>(
-  octokit: Octokit,
-  respPromise: Promise<Octokit.AnyResponse>
-) {
-  let response = await respPromise;
-  for (const x of response.data) {
-    yield x as T;
-  }
-
-  while (octokit.hasNextPage(response)) {
-    response = await octokit.getNextPage(response);
-    for (const x of response.data) {
-      yield x as T;
+  public async *getPullRequests(opts: Parameters<typeof this.octokit.rest.pulls.list>[0]) {
+    for await (const { data: pullRequests } of this.octokit.paginate.iterator(
+      this.octokit.rest.pulls.list,
+      opts
+    )) {
+      for (const pr of pullRequests) {
+        yield pr as PullRequest;
+      }
     }
   }
 }
+
