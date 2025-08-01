@@ -8,7 +8,7 @@
   },
   "scripts": {
     "compile": "tsc",
-    "prepublishOnly": "yarn run compile",
+    "prepublishOnly": "pnpm run compile",
     "semantic-release": "semantic-release"
   },
   "bin": {
@@ -16,7 +16,7 @@
   },
   "files": [
     "bin",
-    "yarn.lock",
+    "pnpm-lock.yaml",
     "lib"
   ],
   "dependencies": {

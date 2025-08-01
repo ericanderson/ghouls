@@ -6,8 +6,11 @@ jobs:
     steps:
       - checkout
       - run:
-          name: install
-          command: npm install
+          name: install pnpm
+          command: npm install -g pnpm
+      - run:
+          name: install dependencies
+          command: pnpm install
       - run:
           name: release
-          command: npm run semantic-release || true
+          command: pnpm run semantic-release || true

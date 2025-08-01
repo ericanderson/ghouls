@@ -6,7 +6,7 @@ The ghouls can help you.
 
 ## Install
 
-`yarn global add ghouls`
+`pnpm add -g ghouls`
 
 ## Configure
 
