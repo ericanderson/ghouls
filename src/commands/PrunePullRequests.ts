@@ -1,9 +1,9 @@
 import { CommandModule } from "yargs";
-import { getConfig } from "../utils/getConfig";
-import { createOctokitPlus } from "../utils/createOctokitPlus";
+import { getConfig } from "../utils/getConfig.js";
+import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import ProgressBar from "progress";
-import { PullRequest, OctokitPlus } from "../OctokitPlus";
-import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch";
+import { PullRequest, OctokitPlus } from "../OctokitPlus.js";
+import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch.js";
 
 export const prunePullRequestsCommand: CommandModule = {
   handler: async (args: any) => {

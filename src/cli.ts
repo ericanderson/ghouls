@@ -1,11 +1,12 @@
-import * as yargs from "yargs";
-import { prunePullRequestsCommand } from "./commands/PrunePullRequests";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { prunePullRequestsCommand } from "./commands/PrunePullRequests.js";
 import sourceMapSupport from "source-map-support";
 sourceMapSupport.install();
 
 export default function cli() {
   process.on("unhandledRejection", console.log);
-  yargs
+  yargs(hideBin(process.argv))
     .usage("$0 <cmd> [args]")
     .demandCommand()
     .command(prunePullRequestsCommand)

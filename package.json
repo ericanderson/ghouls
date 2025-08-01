@@ -1,6 +1,7 @@
 {
   "name": "ghouls",
   "version": "0.0.0-development",
+  "type": "module",
   "main": "index.js",
   "license": "MIT",
   "engines": {
