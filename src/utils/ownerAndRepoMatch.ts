@@ -1,4 +1,4 @@
-import { PullRequestReference } from "../OctokitPlus";
+import { PullRequestReference } from "../OctokitPlus.js";
 
 export function ownerAndRepoMatch(
   a: PullRequestReference,

@@ -10,6 +10,17 @@ The ghouls can help you.
 
 ## Configure
 
+### Option 1: GitHub CLI (Recommended)
+
+If you have the GitHub CLI (`gh`) installed and authenticated, ghouls will automatically use your existing authentication. No configuration file needed!
+
+```bash
+# Authenticate with GitHub CLI if you haven't already
+gh auth login
+```
+
+### Option 2: Configuration File
+
 Create `~/.config/ghouls.config.json`:
 
 ```json
@@ -20,9 +31,19 @@ Create `~/.config/ghouls.config.json`:
 }
 ```
 
+Note: The configuration file is now optional. If not present, ghouls will attempt to use GitHub CLI authentication.
+
 # Prune pull request branches
 
-Run: `ghouls prunePullRequests --dry-run myorg/myrepo`
+Run from within a git repository (auto-detects repo):
+```bash
+ghouls prunePullRequests --dry-run
+```
+
+Or specify a repository explicitly:
+```bash
+ghouls prunePullRequests --dry-run myorg/myrepo
+```
 
 ```
 $ ghouls prunePullRequests myorg/myrepo
