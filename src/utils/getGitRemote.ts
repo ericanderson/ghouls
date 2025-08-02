@@ -3,6 +3,49 @@ import { execaSync } from "execa";
 export interface GitRemoteInfo {
   owner: string;
   repo: string;
+  host: string;
+}
+
+export function parseGitRemote(remoteUrl: string): GitRemoteInfo | null {
+  if (!remoteUrl || typeof remoteUrl !== 'string') {
+    return null;
+  }
+
+  const trimmedUrl = remoteUrl.trim();
+  
+  if (!trimmedUrl) {
+    return null;
+  }
+
+  // Parse Git URLs (both HTTPS and SSH formats)
+  // HTTPS: https://github.com/owner/repo.git or https://github.company.com/owner/repo.git
+  // SSH: git@github.com:owner/repo.git or git@github.company.com:owner/repo.git
+  
+  let match: RegExpMatchArray | null = null;
+  
+  // Try HTTPS format - matches any domain
+  match = trimmedUrl.match(/https:\/\/([^/]+)\/([^/]+)\/([^/]+?)(\.git)?$/);
+  
+  if (match && match[1] && match[2] && match[3]) {
+    return {
+      owner: match[2],
+      repo: match[3],
+      host: match[1]
+    };
+  }
+  
+  // Try SSH format - matches any domain
+  match = trimmedUrl.match(/git@([^:]+):([^/]+)\/([^/]+?)(\.git)?$/);
+  
+  if (match && match[1] && match[2] && match[3]) {
+    return {
+      owner: match[2],
+      repo: match[3],
+      host: match[1]
+    };
+  }
+  
+  return null;
 }
 
 export function getGitRemote(): GitRemoteInfo | null {
@@ -13,34 +56,11 @@ export function getGitRemote(): GitRemoteInfo | null {
       reject: false
     });
 
-    const remoteUrl = stdout?.trim();
-    
-    if (!remoteUrl) {
+    if (!stdout) {
       return null;
     }
 
-    // Parse GitHub URLs (both HTTPS and SSH formats)
-    // HTTPS: https://github.com/owner/repo.git
-    // SSH: git@github.com:owner/repo.git
-    
-    let match: RegExpMatchArray | null = null;
-    
-    // Try HTTPS format
-    match = remoteUrl.match(/https:\/\/github\.com\/([^/]+)\/([^/]+?)(\.git)?$/);
-    
-    if (!match) {
-      // Try SSH format
-      match = remoteUrl.match(/git@github\.com:([^/]+)\/([^/]+?)(\.git)?$/);
-    }
-    
-    if (match && match[1] && match[2]) {
-      return {
-        owner: match[1],
-        repo: match[2]
-      };
-    }
-    
-    return null;
+    return parseGitRemote(stdout);
   } catch (error) {
     return null;
   }

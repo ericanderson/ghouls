@@ -40,6 +40,8 @@ Run from within a git repository (auto-detects repo):
 ghouls prunePullRequests --dry-run
 ```
 
+The auto-detection feature works with both github.com and GitHub Enterprise repositories, automatically detecting the repository owner/name from the remote URL.
+
 Or specify a repository explicitly:
 ```bash
 ghouls prunePullRequests --dry-run myorg/myrepo
