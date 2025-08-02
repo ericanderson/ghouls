@@ -18,6 +18,15 @@ pnpm add -g ghouls  # Install globally
 pnpm install        # Install dependencies
 ```
 
+### Testing
+The project uses Vitest for comprehensive unit testing.
+
+```bash
+pnpm test           # Run all tests
+pnpm test:watch     # Run tests in watch mode
+pnpm test:coverage  # Generate coverage reports
+```
+
 ### TypeScript Compiler
 The project uses strict TypeScript configuration with:
 - Target: ES2017
@@ -67,13 +76,13 @@ ghouls prunePullRequests [--dry-run] <owner>/<repo>
 
 ### Technology Stack Detected
 - Language: TypeScript with strict type checking (ES2017 target)
-- Runtime: Node.js (>=9.8.0)
+- Runtime: Node.js (>=18.0.0)
 - CLI Framework: yargs for command-line interface
 - GitHub API: @octokit/rest for GitHub API interactions
-- Build System: TypeScript compiler with yarn package manager
+- Build System: TypeScript compiler with pnpm package manager
 - Configuration: convict for config management
-- Package Management: yarn with semantic-release
-- No test framework currently configured
+- Package Management: pnpm with semantic-release
+- Test Framework: Vitest with comprehensive unit tests
 
 ### AI Team Assignments
 
