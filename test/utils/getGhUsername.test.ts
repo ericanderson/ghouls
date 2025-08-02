@@ -17,7 +17,7 @@ describe('getGhUsername', () => {
   });
 
   it('should return username when gh api user succeeds', () => {
-    const mockUsername = 'ericanderson';
+    const mockUsername = 'awesome-dude';
     mockedExecaSync.mockReturnValue({
       stdout: mockUsername,
       stderr: '',
@@ -40,7 +40,7 @@ describe('getGhUsername', () => {
   });
 
   it('should return trimmed username when stdout has whitespace', () => {
-    const mockUsername = 'ericanderson';
+    const mockUsername = 'awesome-dude';
     mockedExecaSync.mockReturnValue({
       stdout: `  ${mockUsername}  \n`,
       stderr: '',

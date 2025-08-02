@@ -19,7 +19,7 @@ describe('getGhBaseUrl', () => {
   it('should return GitHub.com API URL when logged in to github.com', () => {
     mockedExecaSync.mockReturnValue({
       stdout: '',
-      stderr: '✓ Logged in to github.com account ericanderson',
+      stderr: '✓ Logged in to github.com account awesome-dude',
       exitCode: 0,
       command: 'gh auth status',
       escapedCommand: 'gh auth status',
@@ -78,7 +78,7 @@ describe('getGhBaseUrl', () => {
 
   it('should parse host from stdout when stderr is empty', () => {
     mockedExecaSync.mockReturnValue({
-      stdout: '✓ Logged in to github.com account ericanderson',
+      stdout: '✓ Logged in to github.com account awesome-dude',
       stderr: '',
       exitCode: 0,
       command: 'gh auth status',
@@ -239,7 +239,7 @@ describe('getGhBaseUrl', () => {
   it('should handle output with additional text after host', () => {
     mockedExecaSync.mockReturnValue({
       stdout: '',
-      stderr: '✓ Logged in to github.com account ericanderson (keyring)',
+      stderr: '✓ Logged in to github.com account awesome-dude (keyring)',
       exitCode: 0,
       command: 'gh auth status',
       escapedCommand: 'gh auth status',

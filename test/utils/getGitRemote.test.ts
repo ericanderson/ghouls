@@ -17,7 +17,7 @@ describe('getGitRemote', () => {
   });
 
   it('should parse HTTPS GitHub URL correctly', () => {
-    const httpsUrl = 'https://github.com/ericanderson/ghouls.git';
+    const httpsUrl = 'https://github.com/awesome-dude/ghouls.git';
     mockedExecaSync.mockReturnValue({
       stdout: httpsUrl,
       stderr: '',
@@ -33,7 +33,7 @@ describe('getGitRemote', () => {
     const result = getGitRemote();
 
     expect(result).toEqual({
-      owner: 'ericanderson',
+      owner: 'awesome-dude',
       repo: 'ghouls',
       host: 'github.com'
     });
@@ -44,7 +44,7 @@ describe('getGitRemote', () => {
   });
 
   it('should parse HTTPS GitHub URL without .git suffix', () => {
-    const httpsUrl = 'https://github.com/ericanderson/ghouls';
+    const httpsUrl = 'https://github.com/awesome-dude/ghouls';
     mockedExecaSync.mockReturnValue({
       stdout: httpsUrl,
       stderr: '',
@@ -60,14 +60,14 @@ describe('getGitRemote', () => {
     const result = getGitRemote();
 
     expect(result).toEqual({
-      owner: 'ericanderson',
+      owner: 'awesome-dude',
       repo: 'ghouls',
       host: 'github.com'
     });
   });
 
   it('should parse SSH GitHub URL correctly', () => {
-    const sshUrl = 'git@github.com:ericanderson/ghouls.git';
+    const sshUrl = 'git@github.com:awesome-dude/ghouls.git';
     mockedExecaSync.mockReturnValue({
       stdout: sshUrl,
       stderr: '',
@@ -83,14 +83,14 @@ describe('getGitRemote', () => {
     const result = getGitRemote();
 
     expect(result).toEqual({
-      owner: 'ericanderson',
+      owner: 'awesome-dude',
       repo: 'ghouls',
       host: 'github.com'
     });
   });
 
   it('should parse SSH GitHub URL without .git suffix', () => {
-    const sshUrl = 'git@github.com:ericanderson/ghouls';
+    const sshUrl = 'git@github.com:awesome-dude/ghouls';
     mockedExecaSync.mockReturnValue({
       stdout: sshUrl,
       stderr: '',
@@ -106,7 +106,7 @@ describe('getGitRemote', () => {
     const result = getGitRemote();
 
     expect(result).toEqual({
-      owner: 'ericanderson',
+      owner: 'awesome-dude',
       repo: 'ghouls',
       host: 'github.com'
     });
@@ -159,7 +159,7 @@ describe('getGitRemote', () => {
   });
 
   it('should trim whitespace from remote URL', () => {
-    const httpsUrl = 'https://github.com/ericanderson/ghouls.git';
+    const httpsUrl = 'https://github.com/awesome-dude/ghouls.git';
     mockedExecaSync.mockReturnValue({
       stdout: `  ${httpsUrl}  \n`,
       stderr: '',
@@ -175,7 +175,7 @@ describe('getGitRemote', () => {
     const result = getGitRemote();
 
     expect(result).toEqual({
-      owner: 'ericanderson',
+      owner: 'awesome-dude',
       repo: 'ghouls',
       host: 'github.com'
     });
@@ -235,7 +235,7 @@ describe('getGitRemote', () => {
     expect(result).toBe(null);
   });
 
-  it('should return null for non-GitHub URLs', () => {
+  it('should parse non-GitHub URLs (e.g., GitLab)', () => {
     const gitlabUrl = 'https://gitlab.com/user/repo.git';
     mockedExecaSync.mockReturnValue({
       stdout: gitlabUrl,
@@ -251,7 +251,11 @@ describe('getGitRemote', () => {
 
     const result = getGitRemote();
 
-    expect(result).toBe(null);
+    expect(result).toEqual({
+      owner: 'user',
+      repo: 'repo',
+      host: 'gitlab.com'
+    });
   });
 
   it('should return null for malformed GitHub URLs', () => {
@@ -342,7 +346,7 @@ describe('getGitRemote', () => {
   });
 
   it('should handle URLs with additional path components', () => {
-    const urlWithPath = 'https://github.com/ericanderson/ghouls.git/some/path';
+    const urlWithPath = 'https://github.com/awesome-dude/ghouls.git/some/path';
     mockedExecaSync.mockReturnValue({
       stdout: urlWithPath,
       stderr: '',
@@ -362,7 +366,7 @@ describe('getGitRemote', () => {
   });
 
   it('should handle SSH URLs with different formats', () => {
-    const sshUrl = 'ssh://git@github.com:22/ericanderson/ghouls.git';
+    const sshUrl = 'ssh://git@github.com:22/awesome-dude/ghouls.git';
     mockedExecaSync.mockReturnValue({
       stdout: sshUrl,
       stderr: '',
