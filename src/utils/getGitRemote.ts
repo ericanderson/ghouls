@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+import { execaSync } from "execa";
 
 export interface GitRemoteInfo {
   owner: string;
@@ -8,7 +8,12 @@ export interface GitRemoteInfo {
 export function getGitRemote(): GitRemoteInfo | null {
   try {
     // Get the remote URL for origin
-    const remoteUrl = execSync("git remote get-url origin", { encoding: "utf8" }).trim();
+    const { stdout } = execaSync("git", ["remote", "get-url", "origin"], {
+      timeout: 5000, // 5 second timeout
+      reject: false
+    });
+
+    const remoteUrl = stdout?.trim();
     
     if (!remoteUrl) {
       return null;
