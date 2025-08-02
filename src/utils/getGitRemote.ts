@@ -19,24 +19,29 @@ export function getGitRemote(): GitRemoteInfo | null {
       return null;
     }
 
-    // Parse GitHub URLs (both HTTPS and SSH formats)
-    // HTTPS: https://github.com/owner/repo.git
-    // SSH: git@github.com:owner/repo.git
+    // Parse Git URLs (both HTTPS and SSH formats)
+    // HTTPS: https://github.com/owner/repo.git or https://github.company.com/owner/repo.git
+    // SSH: git@github.com:owner/repo.git or git@github.company.com:owner/repo.git
     
     let match: RegExpMatchArray | null = null;
     
-    // Try HTTPS format
-    match = remoteUrl.match(/https:\/\/github\.com\/([^/]+)\/([^/]+?)(\.git)?$/);
+    // Try HTTPS format - matches any domain
+    match = remoteUrl.match(/https:\/\/([^/]+)\/([^/]+)\/([^/]+?)(\.git)?$/);
     
-    if (!match) {
-      // Try SSH format
-      match = remoteUrl.match(/git@github\.com:([^/]+)\/([^/]+?)(\.git)?$/);
+    if (match && match[2] && match[3]) {
+      return {
+        owner: match[2],
+        repo: match[3]
+      };
     }
     
-    if (match && match[1] && match[2]) {
+    // Try SSH format - matches any domain
+    match = remoteUrl.match(/git@([^:]+):([^/]+)\/([^/]+?)(\.git)?$/);
+    
+    if (match && match[2] && match[3]) {
       return {
-        owner: match[1],
-        repo: match[2]
+        owner: match[2],
+        repo: match[3]
       };
     }
     
