@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseGitRemote, type GitRemoteInfo } from '../src/utils/getGitRemote.js';
+import { parseGitRemote } from './getGitRemote.js';
 
 describe('parseGitRemote', () => {
   describe('HTTPS URL parsing', () => {

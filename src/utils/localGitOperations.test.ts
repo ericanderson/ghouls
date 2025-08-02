@@ -5,11 +5,9 @@ import {
   getCurrentBranch,
   getBranchStatus,
   deleteLocalBranch,
-  isGitRepository,
-  type LocalBranch,
-  type BranchStatus
-} from '../../src/utils/localGitOperations.js';
-import { createMockExecaResult, expectGitTimeout } from '../setup.js';
+  isGitRepository
+} from './localGitOperations.js';
+import { createMockExecaResult, expectGitTimeout } from '../test/setup.js';
 
 // Mock execa
 vi.mock('execa');

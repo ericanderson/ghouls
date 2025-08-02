@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { pruneLocalBranchesCommand } from '../../src/commands/PruneLocalBranches.js';
-import { getConfig } from '../../src/utils/getConfig.js';
-import { createOctokitPlus } from '../../src/utils/createOctokitPlus.js';
-import { getGitRemote } from '../../src/utils/getGitRemote.js';
+import { pruneLocalBranchesCommand } from './PruneLocalBranches.js';
+import { getConfig } from '../utils/getConfig.js';
+import { createOctokitPlus } from '../utils/createOctokitPlus.js';
+import { getGitRemote } from '../utils/getGitRemote.js';
 import {
   getLocalBranches,
   getCurrentBranch,
   deleteLocalBranch,
   isGitRepository
-} from '../../src/utils/localGitOperations.js';
-import { filterSafeBranches } from '../../src/utils/branchSafetyChecks.js';
-import type { LocalBranch } from '../../src/utils/localGitOperations.js';
-import type { PullRequest, OctokitPlus } from '../../src/OctokitPlus.js';
+} from '../utils/localGitOperations.js';
+import { filterSafeBranches } from '../utils/branchSafetyChecks.js';
+import type { LocalBranch } from '../utils/localGitOperations.js';
+import type { PullRequest, OctokitPlus } from '../OctokitPlus.js';
 
 // Mock all dependencies
 vi.mock('../../src/utils/getConfig.js');
@@ -31,7 +31,7 @@ const mockedIsGitRepository = vi.mocked(isGitRepository);
 const mockedFilterSafeBranches = vi.mocked(filterSafeBranches);
 
 describe('PruneLocalBranches', () => {
-  let mockOctokitPlus: jest.Mocked<OctokitPlus>;
+  let mockOctokitPlus: OctokitPlus;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
@@ -44,49 +44,29 @@ describe('PruneLocalBranches', () => {
   const createPullRequest = (number: number, headRef: string, headSha: string, mergeCommitSha?: string): PullRequest => ({
     id: 123 + number,
     number,
-    title: `Test PR ${number}`,
+    user: { login: 'user' },
+    state: 'closed',
     head: {
+      label: `user:${headRef}`,
       ref: headRef,
       sha: headSha,
-      user: { login: 'user' },
       repo: {
-        id: 1,
         name: 'test-repo',
-        full_name: 'user/test-repo',
         owner: { login: 'user' },
-        private: false,
-        html_url: 'https://github.com/user/test-repo',
-        description: null,
-        fork: false,
-        url: 'https://api.github.com/repos/user/test-repo'
+        fork: false
       }
     },
     base: {
+      label: 'user:main',
       ref: 'main',
       sha: 'base-sha',
-      user: { login: 'user' },
       repo: {
-        id: 1,
         name: 'test-repo',
-        full_name: 'user/test-repo',
         owner: { login: 'user' },
-        private: false,
-        html_url: 'https://github.com/user/test-repo',
-        description: null,
-        fork: false,
-        url: 'https://api.github.com/repos/user/test-repo'
+        fork: false
       }
     },
-    merge_commit_sha: mergeCommitSha || null,
-    merged: !!mergeCommitSha,
-    state: 'closed' as const,
-    draft: false,
-    html_url: `https://github.com/user/test-repo/pull/${number}`,
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-02T00:00:00Z',
-    closed_at: '2023-01-02T00:00:00Z',
-    merged_at: mergeCommitSha ? '2023-01-02T00:00:00Z' : null,
-    user: { login: 'user' }
+    merge_commit_sha: mergeCommitSha || null
   });
 
   beforeEach(() => {
@@ -137,7 +117,7 @@ describe('PruneLocalBranches', () => {
         positional: vi.fn().mockReturnThis()
       };
 
-      pruneLocalBranchesCommand.builder!(mockYargs as any);
+      (pruneLocalBranchesCommand.builder as any)(mockYargs);
 
       expect(mockYargs.env).toHaveBeenCalled();
       expect(mockYargs.boolean).toHaveBeenCalledWith('dry-run');
@@ -159,7 +139,7 @@ describe('PruneLocalBranches', () => {
         })
       };
 
-      pruneLocalBranchesCommand.builder!(mockYargs as any);
+      (pruneLocalBranchesCommand.builder as any)(mockYargs);
     });
 
     it('should handle undefined repo string', () => {
@@ -175,7 +155,7 @@ describe('PruneLocalBranches', () => {
         })
       };
 
-      pruneLocalBranchesCommand.builder!(mockYargs as any);
+      (pruneLocalBranchesCommand.builder as any)(mockYargs);
     });
 
     it('should reject invalid repo format', () => {
@@ -192,7 +172,7 @@ describe('PruneLocalBranches', () => {
         })
       };
 
-      pruneLocalBranchesCommand.builder!(mockYargs as any);
+      (pruneLocalBranchesCommand.builder as any)(mockYargs);
     });
 
     it('should validate owner name format', () => {
@@ -209,7 +189,7 @@ describe('PruneLocalBranches', () => {
         })
       };
 
-      pruneLocalBranchesCommand.builder!(mockYargs as any);
+      (pruneLocalBranchesCommand.builder as any)(mockYargs);
     });
 
     it('should validate repo name format', () => {
@@ -225,7 +205,7 @@ describe('PruneLocalBranches', () => {
         })
       };
 
-      pruneLocalBranchesCommand.builder!(mockYargs as any);
+      (pruneLocalBranchesCommand.builder as any)(mockYargs);
     });
   });
 
@@ -233,7 +213,7 @@ describe('PruneLocalBranches', () => {
     it('should throw error when not in git repository', async () => {
       mockedIsGitRepository.mockReturnValue(false);
 
-      await expect(pruneLocalBranchesCommand.handler!({ dryRun: false })).rejects.toThrow(
+      await expect(pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' })).rejects.toThrow(
         'This command must be run from within a git repository.'
       );
     });
@@ -253,11 +233,13 @@ describe('PruneLocalBranches', () => {
           yield pr;
         }
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
       const args = {
         repo: { owner: 'test-owner', repo: 'test-repo' },
-        dryRun: true
+        dryRun: true,
+        _: [],
+        $0: 'ghouls'
       };
 
       await pruneLocalBranchesCommand.handler!(args);
@@ -273,7 +255,7 @@ describe('PruneLocalBranches', () => {
     });
 
     it('should use git remote when repo not provided', async () => {
-      mockedGetGitRemote.mockReturnValue({ owner: 'remote-owner', repo: 'remote-repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'remote-owner', repo: 'remote-repo', host: 'github.com' });
       
       const branches = [createLocalBranch('feature-1', 'abc123')];
       mockedGetLocalBranches.mockReturnValue(branches);
@@ -289,9 +271,9 @@ describe('PruneLocalBranches', () => {
           yield pr;
         }
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      const args = { dryRun: false };
+      const args = { dryRun: false, _: [], $0: 'ghouls' };
 
       await pruneLocalBranchesCommand.handler!(args);
 
@@ -309,7 +291,7 @@ describe('PruneLocalBranches', () => {
     it('should throw error when no repo provided and no git remote', async () => {
       mockedGetGitRemote.mockReturnValue(null);
 
-      await expect(pruneLocalBranchesCommand.handler!({ dryRun: false })).rejects.toThrow(
+      await expect(pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' })).rejects.toThrow(
         'No repo specified and unable to detect from git remote. Please run from a git repository or specify owner/repo.'
       );
     });
@@ -317,13 +299,13 @@ describe('PruneLocalBranches', () => {
     it('should handle empty local branches', async () => {
       mockedGetLocalBranches.mockReturnValue([]);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       // Mock async generator for getPullRequests
       const asyncGenerator = (async function* () {})();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('No local branches found.');
     });
@@ -335,7 +317,7 @@ describe('PruneLocalBranches', () => {
       ];
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       // All branches are unsafe
       mockedFilterSafeBranches.mockReturnValue([
@@ -345,9 +327,9 @@ describe('PruneLocalBranches', () => {
 
       // Mock async generator for getPullRequests
       const asyncGenerator = (async function* () {})();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('\nNo branches are safe to delete.');
       expect(consoleLogSpy).toHaveBeenCalledWith('\nSkipping unsafe branches:');
@@ -362,7 +344,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: pr1 },
@@ -376,9 +358,9 @@ describe('PruneLocalBranches', () => {
           yield pr;
         }
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       expect(mockedDeleteLocalBranch).toHaveBeenCalledWith('feature-1');
       expect(mockedDeleteLocalBranch).toHaveBeenCalledWith('feature-2');
@@ -392,7 +374,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: pr1 }
@@ -402,9 +384,9 @@ describe('PruneLocalBranches', () => {
       const asyncGenerator = (async function* () {
         yield pr1;
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: true });
+      await pruneLocalBranchesCommand.handler!({ dryRun: true, _: [], $0: 'ghouls' });
 
       expect(mockedDeleteLocalBranch).not.toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith('[DRY RUN] Would delete: feature-1 (#1)');
@@ -416,7 +398,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: undefined }
@@ -424,9 +406,9 @@ describe('PruneLocalBranches', () => {
 
       // Mock async generator for getPullRequests (no PRs)
       const asyncGenerator = (async function* () {})();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: true });
+      await pruneLocalBranchesCommand.handler!({ dryRun: true, _: [], $0: 'ghouls' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('[DRY RUN] Would delete: feature-no-pr (no PR)');
     });
@@ -437,7 +419,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: pr1 }
@@ -451,9 +433,9 @@ describe('PruneLocalBranches', () => {
       const asyncGenerator = (async function* () {
         yield pr1;
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('Error deleting feature-1: Git deletion failed');
       expect(consoleLogSpy).toHaveBeenCalledWith('  Successfully deleted: 0 branches');
@@ -470,7 +452,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: pr1 },
@@ -482,9 +464,9 @@ describe('PruneLocalBranches', () => {
       const asyncGenerator = (async function* () {
         yield pr1;
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('Found 3 local branches');
       expect(consoleLogSpy).toHaveBeenCalledWith('Found 1 merged pull requests');
@@ -500,7 +482,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: mergedPR }
@@ -511,9 +493,9 @@ describe('PruneLocalBranches', () => {
         yield mergedPR;
         yield closedPR;
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       // Should only count the merged PR
       expect(consoleLogSpy).toHaveBeenCalledWith('Found 1 merged pull requests');
@@ -531,7 +513,7 @@ describe('PruneLocalBranches', () => {
       
       mockedGetLocalBranches.mockReturnValue(branches);
       mockedGetCurrentBranch.mockReturnValue('main');
-      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo' });
+      mockedGetGitRemote.mockReturnValue({ owner: 'owner', repo: 'repo', host: 'github.com' });
 
       mockedFilterSafeBranches.mockReturnValue([
         { branch: branches[0], safetyCheck: { safe: true }, matchingPR: pr1 }
@@ -541,9 +523,9 @@ describe('PruneLocalBranches', () => {
       const asyncGenerator = (async function* () {
         yield pr1;
       })();
-      mockOctokitPlus.getPullRequests.mockReturnValue(asyncGenerator);
+      (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       // When TTY is available, the code uses a progress bar
       // Verify the regular console.log calls still happen (for non-progress messages)
@@ -554,3 +536,4 @@ describe('PruneLocalBranches', () => {
     });
   });
 });
+

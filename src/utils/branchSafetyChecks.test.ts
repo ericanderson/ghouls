@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   isBranchSafeToDelete,
-  filterSafeBranches,
-  type SafetyCheckResult
-} from '../../src/utils/branchSafetyChecks.js';
-import { getBranchStatus } from '../../src/utils/localGitOperations.js';
-import type { LocalBranch, BranchStatus } from '../../src/utils/localGitOperations.js';
-import type { PullRequest } from '../../src/OctokitPlus.js';
+  filterSafeBranches
+} from './branchSafetyChecks.js';
+import { getBranchStatus } from './localGitOperations.js';
+import type { LocalBranch } from './localGitOperations.js';
+import type { PullRequest } from '../OctokitPlus.js';
 
 // Mock localGitOperations
 vi.mock('../../src/utils/localGitOperations.js');
@@ -31,49 +30,29 @@ describe('branchSafetyChecks', () => {
     const createPullRequest = (headSha: string, mergeCommitSha?: string): PullRequest => ({
       id: 123,
       number: 1,
-      title: 'Test PR',
+      user: { login: 'user' },
+      state: 'closed',
       head: {
+        label: 'user:feature-branch',
         ref: 'feature-branch',
         sha: headSha,
-        user: { login: 'user' },
         repo: {
-          id: 1,
           name: 'test-repo',
-          full_name: 'user/test-repo',
           owner: { login: 'user' },
-          private: false,
-          html_url: 'https://github.com/user/test-repo',
-          description: null,
-          fork: false,
-          url: 'https://api.github.com/repos/user/test-repo'
+          fork: false
         }
       },
       base: {
+        label: 'user:main',
         ref: 'main',
         sha: 'base-sha',
-        user: { login: 'user' },
         repo: {
-          id: 1,
           name: 'test-repo',
-          full_name: 'user/test-repo',
           owner: { login: 'user' },
-          private: false,
-          html_url: 'https://github.com/user/test-repo',
-          description: null,
-          fork: false,
-          url: 'https://api.github.com/repos/user/test-repo'
+          fork: false
         }
       },
-      merge_commit_sha: mergeCommitSha || null,
-      merged: !!mergeCommitSha,
-      state: 'closed' as const,
-      draft: false,
-      html_url: 'https://github.com/user/test-repo/pull/1',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-      closed_at: '2023-01-02T00:00:00Z',
-      merged_at: mergeCommitSha ? '2023-01-02T00:00:00Z' : null,
-      user: { login: 'user' }
+      merge_commit_sha: mergeCommitSha || null
     });
 
     describe('current branch checks', () => {
@@ -307,49 +286,29 @@ describe('branchSafetyChecks', () => {
     const createPullRequest = (headRef: string, headSha: string, mergeCommitSha?: string): PullRequest => ({
       id: 123,
       number: 1,
-      title: 'Test PR',
+      user: { login: 'user' },
+      state: 'closed',
       head: {
+        label: `user:${headRef}`,
         ref: headRef,
         sha: headSha,
-        user: { login: 'user' },
         repo: {
-          id: 1,
           name: 'test-repo',
-          full_name: 'user/test-repo',
           owner: { login: 'user' },
-          private: false,
-          html_url: 'https://github.com/user/test-repo',
-          description: null,
-          fork: false,
-          url: 'https://api.github.com/repos/user/test-repo'
+          fork: false
         }
       },
       base: {
+        label: 'user:main',
         ref: 'main',
         sha: 'base-sha',
-        user: { login: 'user' },
         repo: {
-          id: 1,
           name: 'test-repo',
-          full_name: 'user/test-repo',
           owner: { login: 'user' },
-          private: false,
-          html_url: 'https://github.com/user/test-repo',
-          description: null,
-          fork: false,
-          url: 'https://api.github.com/repos/user/test-repo'
+          fork: false
         }
       },
-      merge_commit_sha: mergeCommitSha || null,
-      merged: !!mergeCommitSha,
-      state: 'closed' as const,
-      draft: false,
-      html_url: 'https://github.com/user/test-repo/pull/1',
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-02T00:00:00Z',
-      closed_at: '2023-01-02T00:00:00Z',
-      merged_at: mergeCommitSha ? '2023-01-02T00:00:00Z' : null,
-      user: { login: 'user' }
+      merge_commit_sha: mergeCommitSha || null
     });
 
     it('should filter branches with safety checks', () => {

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { execaSync } from 'execa';
-import { getGhBaseUrl } from '../../src/utils/getGhBaseUrl.js';
+import { getGhBaseUrl } from './getGhBaseUrl.js';
+import { createMockExecaResult } from '../test/setup.js';
 
 // Mock execa
 vi.mock('execa');
@@ -17,17 +18,12 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should return GitHub.com API URL when logged in to github.com', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '✓ Logged in to github.com account awesome-dude',
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -40,17 +36,12 @@ describe('getGhBaseUrl', () => {
 
   it('should return enterprise API URL when logged in to enterprise host', () => {
     const enterpriseHost = 'github.enterprise.com';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: `✓ Logged in to ${enterpriseHost} account user`,
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -59,17 +50,12 @@ describe('getGhBaseUrl', () => {
 
   it('should handle "Active account on" format', () => {
     const enterpriseHost = 'github.company.com';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: `Active account on ${enterpriseHost} (user123)`,
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -77,17 +63,12 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should parse host from stdout when stderr is empty', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '✓ Logged in to github.com account awesome-dude',
       stderr: '',
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -95,18 +76,13 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should handle multiline output with host on separate line', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: `github.enterprise.com
   ✓ Logged in to github.enterprise.com account user`,
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -114,17 +90,13 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should default to github.com when no host match found', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: 'No auth status found',
       exitCode: 1,
       command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: true,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      failed: true
+    }));
 
     const result = getGhBaseUrl();
 
@@ -132,17 +104,12 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should default to github.com when both stdout and stderr are empty', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '',
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -150,17 +117,13 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should default to github.com when gh command is not found', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: 'gh: command not found',
       exitCode: 127,
       command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: true,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      failed: true
+    }));
 
     const result = getGhBaseUrl();
 
@@ -178,17 +141,14 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should handle timeout correctly', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '',
       exitCode: 124,
       command: 'gh auth status',
-      escapedCommand: 'gh auth status',
       failed: true,
-      timedOut: true,
-      isCanceled: false,
-      killed: false
-    });
+      timedOut: true
+    }));
 
     const result = getGhBaseUrl();
 
@@ -200,17 +160,12 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should handle case insensitive host matching', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '✓ LOGGED IN TO github.com account user',
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -219,17 +174,12 @@ describe('getGhBaseUrl', () => {
 
   it('should handle complex enterprise domain names', () => {
     const enterpriseHost = 'git.internal.company-name.co.uk';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: `✓ Logged in to ${enterpriseHost} account user`,
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 
@@ -237,17 +187,12 @@ describe('getGhBaseUrl', () => {
   });
 
   it('should handle output with additional text after host', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '✓ Logged in to github.com account awesome-dude (keyring)',
       exitCode: 0,
-      command: 'gh auth status',
-      escapedCommand: 'gh auth status',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'gh auth status'
+    }));
 
     const result = getGhBaseUrl();
 

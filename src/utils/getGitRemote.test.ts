@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { execaSync } from 'execa';
-import { getGitRemote } from '../../src/utils/getGitRemote.js';
+import { getGitRemote } from './getGitRemote.js';
+import { createMockExecaResult } from '../test/setup.js';
 
 // Mock execa
 vi.mock('execa');
@@ -18,17 +19,12 @@ describe('getGitRemote', () => {
 
   it('should parse HTTPS GitHub URL correctly', () => {
     const httpsUrl = 'https://github.com/awesome-dude/ghouls.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: httpsUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -45,17 +41,12 @@ describe('getGitRemote', () => {
 
   it('should parse HTTPS GitHub URL without .git suffix', () => {
     const httpsUrl = 'https://github.com/awesome-dude/ghouls';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: httpsUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -68,17 +59,12 @@ describe('getGitRemote', () => {
 
   it('should parse SSH GitHub URL correctly', () => {
     const sshUrl = 'git@github.com:awesome-dude/ghouls.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: sshUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -91,17 +77,12 @@ describe('getGitRemote', () => {
 
   it('should parse SSH GitHub URL without .git suffix', () => {
     const sshUrl = 'git@github.com:awesome-dude/ghouls';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: sshUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -114,17 +95,12 @@ describe('getGitRemote', () => {
 
   it('should handle repository names with dashes and underscores', () => {
     const httpsUrl = 'https://github.com/some-user/my_awesome-repo.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: httpsUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -137,17 +113,12 @@ describe('getGitRemote', () => {
 
   it('should handle organization names with dots', () => {
     const httpsUrl = 'https://github.com/some.org/repo.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: httpsUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -160,17 +131,12 @@ describe('getGitRemote', () => {
 
   it('should trim whitespace from remote URL', () => {
     const httpsUrl = 'https://github.com/awesome-dude/ghouls.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: `  ${httpsUrl}  \n`,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -182,17 +148,12 @@ describe('getGitRemote', () => {
   });
 
   it('should return null when stdout is empty', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -200,17 +161,12 @@ describe('getGitRemote', () => {
   });
 
   it('should return null when stdout is only whitespace', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '   \n\t  ',
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -218,17 +174,12 @@ describe('getGitRemote', () => {
   });
 
   it('should return null when stdout is undefined', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: undefined as any,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -237,17 +188,12 @@ describe('getGitRemote', () => {
 
   it('should parse non-GitHub URLs (e.g., GitLab)', () => {
     const gitlabUrl = 'https://gitlab.com/user/repo.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: gitlabUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -260,17 +206,12 @@ describe('getGitRemote', () => {
 
   it('should return null for malformed GitHub URLs', () => {
     const malformedUrl = 'https://github.com/incomplete';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: malformedUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -278,17 +219,13 @@ describe('getGitRemote', () => {
   });
 
   it('should return null when git command fails', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: 'fatal: not a git repository',
       exitCode: 128,
       command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: true,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      failed: true
+    }));
 
     const result = getGitRemote();
 
@@ -296,17 +233,13 @@ describe('getGitRemote', () => {
   });
 
   it('should return null when origin remote does not exist', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: 'fatal: No such remote \'origin\'',
       exitCode: 128,
       command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: true,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      failed: true
+    }));
 
     const result = getGitRemote();
 
@@ -324,17 +257,14 @@ describe('getGitRemote', () => {
   });
 
   it('should handle timeout correctly', () => {
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: '',
       stderr: '',
       exitCode: 124,
       command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
       failed: true,
-      timedOut: true,
-      isCanceled: false,
-      killed: false
-    });
+      timedOut: true
+    }));
 
     const result = getGitRemote();
 
@@ -347,17 +277,12 @@ describe('getGitRemote', () => {
 
   it('should handle URLs with additional path components', () => {
     const urlWithPath = 'https://github.com/awesome-dude/ghouls.git/some/path';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: urlWithPath,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
@@ -367,17 +292,12 @@ describe('getGitRemote', () => {
 
   it('should handle SSH URLs with different formats', () => {
     const sshUrl = 'ssh://git@github.com:22/awesome-dude/ghouls.git';
-    mockedExecaSync.mockReturnValue({
+    mockedExecaSync.mockReturnValue(createMockExecaResult({
       stdout: sshUrl,
       stderr: '',
       exitCode: 0,
-      command: 'git remote get-url origin',
-      escapedCommand: 'git remote get-url origin',
-      failed: false,
-      timedOut: false,
-      isCanceled: false,
-      killed: false
-    });
+      command: 'git remote get-url origin'
+    }));
 
     const result = getGitRemote();
 
