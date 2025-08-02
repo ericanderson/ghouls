@@ -9,9 +9,9 @@
   },
   "scripts": {
     "compile": "tsc",
-    "test": "vitest",
-    "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepublishOnly": "pnpm run compile",
     "semantic-release": "semantic-release"
   },

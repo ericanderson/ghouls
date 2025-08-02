@@ -55,3 +55,26 @@ $ ghouls prunePullRequests myorg/myrepo
 #1758 - Skipping remote: heads/ml/search-polish (mismatched refs)
 ...
 ```
+
+# Development
+
+## Testing
+
+The project uses Vitest for comprehensive unit testing.
+
+### Run tests
+```bash
+pnpm test
+```
+
+### Run tests in watch mode
+```bash
+pnpm test:watch
+```
+
+### Generate coverage reports
+```bash
+pnpm test:coverage
+```
+
+The test suite includes comprehensive unit tests covering all core functionality, utilities, and edge cases.
