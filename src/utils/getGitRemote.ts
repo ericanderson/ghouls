@@ -3,6 +3,7 @@ import { execaSync } from "execa";
 export interface GitRemoteInfo {
   owner: string;
   repo: string;
+  host: string;
 }
 
 export function parseGitRemote(remoteUrl: string): GitRemoteInfo | null {
@@ -25,20 +26,22 @@ export function parseGitRemote(remoteUrl: string): GitRemoteInfo | null {
   // Try HTTPS format - matches any domain
   match = trimmedUrl.match(/https:\/\/([^/]+)\/([^/]+)\/([^/]+?)(\.git)?$/);
   
-  if (match && match[2] && match[3]) {
+  if (match && match[1] && match[2] && match[3]) {
     return {
       owner: match[2],
-      repo: match[3]
+      repo: match[3],
+      host: match[1]
     };
   }
   
   // Try SSH format - matches any domain
   match = trimmedUrl.match(/git@([^:]+):([^/]+)\/([^/]+?)(\.git)?$/);
   
-  if (match && match[2] && match[3]) {
+  if (match && match[1] && match[2] && match[3]) {
     return {
       owner: match[2],
-      repo: match[3]
+      repo: match[3],
+      host: match[1]
     };
   }
   

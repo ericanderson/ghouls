@@ -5,79 +5,79 @@ describe('parseGitRemote', () => {
   describe('HTTPS URL parsing', () => {
     it('should parse standard GitHub.com HTTPS URL with .git', () => {
       const result = parseGitRemote('https://github.com/owner/repo.git');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.com' });
     });
 
     it('should parse standard GitHub.com HTTPS URL without .git', () => {
       const result = parseGitRemote('https://github.com/owner/repo');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.com' });
     });
 
     it('should parse GitHub Enterprise HTTPS URL with .git', () => {
       const result = parseGitRemote('https://github.enterprise.com/owner/repo.git');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.enterprise.com' });
     });
 
     it('should parse GitHub Enterprise HTTPS URL without .git', () => {
       const result = parseGitRemote('https://github.enterprise.com/owner/repo');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.enterprise.com' });
     });
 
     it('should parse custom domain HTTPS URL', () => {
       const result = parseGitRemote('https://git.company.internal/team/project.git');
-      expect(result).toEqual({ owner: 'team', repo: 'project' });
+      expect(result).toEqual({ owner: 'team', repo: 'project', host: 'git.company.internal' });
     });
 
     it('should handle repos with hyphens and underscores in HTTPS URLs', () => {
       const result = parseGitRemote('https://github.com/my-org/my_awesome-repo.git');
-      expect(result).toEqual({ owner: 'my-org', repo: 'my_awesome-repo' });
+      expect(result).toEqual({ owner: 'my-org', repo: 'my_awesome-repo', host: 'github.com' });
     });
 
     it('should handle numeric owner and repo names in HTTPS URLs', () => {
       const result = parseGitRemote('https://github.com/user123/repo456.git');
-      expect(result).toEqual({ owner: 'user123', repo: 'repo456' });
+      expect(result).toEqual({ owner: 'user123', repo: 'repo456', host: 'github.com' });
     });
 
     it('should handle subdomain with port in HTTPS URLs', () => {
       const result = parseGitRemote('https://git.company.com:8080/team/project.git');
-      expect(result).toEqual({ owner: 'team', repo: 'project' });
+      expect(result).toEqual({ owner: 'team', repo: 'project', host: 'git.company.com:8080' });
     });
   });
 
   describe('SSH URL parsing', () => {
     it('should parse standard GitHub.com SSH URL with .git', () => {
       const result = parseGitRemote('git@github.com:owner/repo.git');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.com' });
     });
 
     it('should parse standard GitHub.com SSH URL without .git', () => {
       const result = parseGitRemote('git@github.com:owner/repo');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.com' });
     });
 
     it('should parse GitHub Enterprise SSH URL with .git', () => {
       const result = parseGitRemote('git@github.enterprise.com:owner/repo.git');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.enterprise.com' });
     });
 
     it('should parse GitHub Enterprise SSH URL without .git', () => {
       const result = parseGitRemote('git@github.enterprise.com:owner/repo');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.enterprise.com' });
     });
 
     it('should parse custom domain SSH URL', () => {
       const result = parseGitRemote('git@git.company.internal:team/project.git');
-      expect(result).toEqual({ owner: 'team', repo: 'project' });
+      expect(result).toEqual({ owner: 'team', repo: 'project', host: 'git.company.internal' });
     });
 
     it('should handle repos with hyphens and underscores in SSH URLs', () => {
       const result = parseGitRemote('git@github.com:my-org/my_awesome-repo.git');
-      expect(result).toEqual({ owner: 'my-org', repo: 'my_awesome-repo' });
+      expect(result).toEqual({ owner: 'my-org', repo: 'my_awesome-repo', host: 'github.com' });
     });
 
     it('should handle numeric owner and repo names in SSH URLs', () => {
       const result = parseGitRemote('git@github.com:user123/repo456.git');
-      expect(result).toEqual({ owner: 'user123', repo: 'repo456' });
+      expect(result).toEqual({ owner: 'user123', repo: 'repo456', host: 'github.com' });
     });
 
     it('should return null for SSH URL with custom port (not supported format)', () => {
@@ -115,7 +115,7 @@ describe('parseGitRemote', () => {
 
     it('should handle URLs with leading/trailing whitespace', () => {
       const result = parseGitRemote('  https://github.com/owner/repo.git  ');
-      expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+      expect(result).toEqual({ owner: 'owner', repo: 'repo', host: 'github.com' });
     });
 
     it('should return null for invalid HTTPS URL format', () => {
@@ -158,10 +158,10 @@ describe('parseGitRemote', () => {
     it('should maintain compatibility with existing github.com URLs', () => {
       // These are the original test cases that should continue to work
       const githubHttps = parseGitRemote('https://github.com/facebook/react.git');
-      expect(githubHttps).toEqual({ owner: 'facebook', repo: 'react' });
+      expect(githubHttps).toEqual({ owner: 'facebook', repo: 'react', host: 'github.com' });
 
       const githubSsh = parseGitRemote('git@github.com:facebook/react.git');
-      expect(githubSsh).toEqual({ owner: 'facebook', repo: 'react' });
+      expect(githubSsh).toEqual({ owner: 'facebook', repo: 'react', host: 'github.com' });
     });
 
     it('should handle real-world repository examples', () => {
@@ -177,6 +177,7 @@ describe('parseGitRemote', () => {
         expect(result).toBeTruthy();
         expect(result?.owner).toBeTruthy();
         expect(result?.repo).toBeTruthy();
+        expect(result?.host).toBeTruthy();
       });
     });
   });
@@ -195,15 +196,16 @@ describe('parseGitRemote', () => {
         expect(result).toBeTruthy();
         expect(result?.owner).toBeTruthy();
         expect(result?.repo).toBeTruthy();
+        expect(result?.host).toBeTruthy();
       });
     });
 
     it('should correctly extract owner and repo from enterprise URLs', () => {
       const result1 = parseGitRemote('https://github.mycompany.com/platform-team/core-service.git');
-      expect(result1).toEqual({ owner: 'platform-team', repo: 'core-service' });
+      expect(result1).toEqual({ owner: 'platform-team', repo: 'core-service', host: 'github.mycompany.com' });
 
       const result2 = parseGitRemote('git@git.enterprise.local:backend/user-api.git');
-      expect(result2).toEqual({ owner: 'backend', repo: 'user-api' });
+      expect(result2).toEqual({ owner: 'backend', repo: 'user-api', host: 'git.enterprise.local' });
     });
   });
 });
