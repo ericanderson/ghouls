@@ -1,5 +1,7 @@
 # Ghouls
 
+![Ghouls Logo](logo.webp)
+
 The ghouls can help you.
 
 # Breaking Changes
