@@ -8,30 +8,19 @@ The ghouls can help you.
 
 `pnpm add -g ghouls`
 
-## Configure
+## Authentication
 
-### Option 1: GitHub CLI (Recommended)
-
-If you have the GitHub CLI (`gh`) installed and authenticated, ghouls will automatically use your existing authentication. No configuration file needed!
+Ghouls uses GitHub CLI authentication. Make sure you have the GitHub CLI (`gh`) installed and authenticated:
 
 ```bash
-# Authenticate with GitHub CLI if you haven't already
+# Install GitHub CLI if you haven't already
+# See: https://cli.github.com/
+
+# Authenticate with GitHub CLI
 gh auth login
 ```
 
-### Option 2: Configuration File
-
-Create `~/.config/ghouls.config.json`:
-
-```json
-{
-    "username": "github-username",
-    "token": "github-personal-access-token",
-    "baseUrl": "https://ghe.local/api/v3"
-}
-```
-
-Note: The configuration file is now optional. If not present, ghouls will attempt to use GitHub CLI authentication.
+That's it! Ghouls will automatically use your existing GitHub CLI authentication.
 
 # Commands
 

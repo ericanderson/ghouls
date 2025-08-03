@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { pruneLocalBranchesCommand } from './PruneLocalBranches.js';
-import { getConfig } from '../utils/getConfig.js';
 import { createOctokitPlus } from '../utils/createOctokitPlus.js';
 import { getGitRemote } from '../utils/getGitRemote.js';
 import {
@@ -15,7 +14,6 @@ import type { PullRequest, OctokitPlus } from '../OctokitPlus.js';
 import inquirer from 'inquirer';
 
 // Mock all dependencies
-vi.mock('../../src/utils/getConfig.js');
 vi.mock('../../src/utils/createOctokitPlus.js');
 vi.mock('../../src/utils/getGitRemote.js');
 vi.mock('../../src/utils/localGitOperations.js');
@@ -23,7 +21,6 @@ vi.mock('../../src/utils/branchSafetyChecks.js');
 vi.mock('progress');
 vi.mock('inquirer');
 
-const mockedGetConfig = vi.mocked(getConfig);
 const mockedCreateOctokitPlus = vi.mocked(createOctokitPlus);
 const mockedGetGitRemote = vi.mocked(getGitRemote);
 const mockedGetLocalBranches = vi.mocked(getLocalBranches);
@@ -106,11 +103,6 @@ describe('PruneLocalBranches', () => {
     } as any;
 
     mockedCreateOctokitPlus.mockReturnValue(mockOctokitPlus);
-    mockedGetConfig.mockReturnValue({
-      token: 'test-token',
-      username: 'test-user',
-      baseUrl: 'https://api.github.com'
-    });
     mockedIsGitRepository.mockReturnValue(true);
   });
 
