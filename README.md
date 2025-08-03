@@ -95,6 +95,15 @@ For other platforms and more installation options, visit: https://cli.github.com
 
 # Commands
 
+## Output Modes
+
+Ghouls supports two output modes to suit different use cases:
+
+- **Default mode**: Shows essential information only - final results, summaries, and errors. Ideal for scripts and everyday use.
+- **Verbose mode** (`-v` or `--verbose`): Shows detailed progress information including scanning progress, branch analysis details, and progress bars. Useful for debugging or understanding what the tool is doing.
+
+All commands support both output modes. Use the verbose flag when you need more insight into the cleanup process.
+
 ## Delete remote branches
 
 Safely deletes remote branches that have been merged via pull requests.
@@ -102,6 +111,13 @@ Safely deletes remote branches that have been merged via pull requests.
 Run from within a git repository (auto-detects repo):
 ```bash
 ghouls remote --dry-run
+```
+
+For detailed output including progress information, use the verbose flag:
+```bash
+ghouls remote --dry-run --verbose
+# or
+ghouls remote --dry-run -v
 ```
 
 The auto-detection feature works with both github.com and GitHub Enterprise repositories, automatically detecting the repository owner/name from the remote URL.
@@ -131,6 +147,13 @@ Safely deletes local branches that have been merged via pull requests. This comm
 Run from within a git repository (auto-detects repo):
 ```bash
 ghouls local --dry-run
+```
+
+For detailed output including progress information, use the verbose flag:
+```bash
+ghouls local --dry-run --verbose
+# or
+ghouls local --dry-run -v
 ```
 
 Or specify a repository explicitly:
@@ -190,6 +213,13 @@ The `all` command combines both remote and local branch cleanup in a single oper
 Run from within a git repository (auto-detects repo):
 ```bash
 ghouls all --dry-run
+```
+
+For detailed output including progress information, use the verbose flag:
+```bash
+ghouls all --dry-run --verbose
+# or
+ghouls all --dry-run -v
 ```
 
 Or specify a repository explicitly:

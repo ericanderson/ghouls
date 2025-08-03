@@ -11,9 +11,22 @@ import {
 } from "../utils/localGitOperations.js";
 import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
 import { promptWithCancel } from "../utils/promptWithCancel.js";
+import { 
+  output, 
+  verboseOutput, 
+  outputSummary, 
+  outputError, 
+  isVerbose 
+} from "../utils/outputFormatter.js";
 
 export const pruneLocalBranchesCommand: CommandModule = {
   handler: async (args: any) => {
+    // Set output options based on CLI flags
+    const { setOutputOptions } = await import("../utils/outputFormatter.js");
+    setOutputOptions({
+      verbose: Boolean(args.verbose)
+    });
+
     let owner: string;
     let repo: string;
 
@@ -59,6 +72,12 @@ export const pruneLocalBranchesCommand: CommandModule = {
         type: "boolean",
         description: "Skip interactive mode and delete all safe branches automatically"
       })
+      .option("verbose", {
+        alias: "v",
+        type: "boolean",
+        description: "Show detailed output including progress information",
+        default: false
+      })
       .positional("repo", {
         type: "string",
         coerce: (s: string | undefined) => {
@@ -99,43 +118,41 @@ class PruneLocalBranches {
   ) {}
 
   public async perform() {
-    console.log(`\nScanning for local branches that can be safely deleted...`);
+    verboseOutput("Scanning for local branches that can be safely deleted...");
     
     // Get all local branches
     const localBranches = getLocalBranches();
     const currentBranch = getCurrentBranch();
     
-    console.log(`Found ${localBranches.length} local branches`);
+    verboseOutput(`Found ${localBranches.length} local branches`);
     
     if (localBranches.length === 0) {
-      console.log("No local branches found.");
+      output("No local branches found.");
       return;
     }
 
     // Get merged PRs from GitHub
-    console.log("Fetching merged pull requests from GitHub...");
+    verboseOutput("Fetching merged pull requests from GitHub...");
     const mergedPRs = await this.getMergedPRsMap();
-    console.log(`Found ${mergedPRs.size} merged pull requests`);
+    verboseOutput(`Found ${mergedPRs.size} merged pull requests`);
 
     // Filter branches for safety
     const branchAnalysis = filterSafeBranches(localBranches, currentBranch, mergedPRs);
     const safeBranches = branchAnalysis.filter(analysis => analysis.safetyCheck.safe);
     const unsafeBranches = branchAnalysis.filter(analysis => !analysis.safetyCheck.safe);
 
-    console.log(`\nBranch Analysis:`);
-    console.log(`  Safe to delete: ${safeBranches.length}`);
-    console.log(`  Unsafe to delete: ${unsafeBranches.length}`);
+    output(`Found ${safeBranches.length} local branch${safeBranches.length === 1 ? '' : 'es'} that can be safely deleted.`);
 
-    // Show unsafe branches and reasons
+    // Show unsafe branches and reasons in verbose mode
     if (unsafeBranches.length > 0) {
-      console.log(`\nSkipping unsafe branches:`);
+      verboseOutput(`\nSkipping ${unsafeBranches.length} unsafe branches:`);
       for (const { branch, safetyCheck } of unsafeBranches) {
-        console.log(`  - ${branch.name} (${safetyCheck.reason})`);
+        verboseOutput(`  - ${branch.name} (${safetyCheck.reason})`);
       }
     }
 
     if (safeBranches.length === 0) {
-      console.log("\nNo branches are safe to delete.");
+      output("No local branches are safe to delete.");
       return;
     }
 
@@ -165,12 +182,12 @@ class PruneLocalBranches {
       ]);
 
       if (result === null) {
-        console.log("\nOperation cancelled by user");
+        output("Operation cancelled by user");
         return;
       }
 
       if (result.selectedBranches.length === 0) {
-        console.log("\nNo branches selected for deletion.");
+        output("No branches selected for deletion.");
         return;
       }
 
@@ -180,13 +197,12 @@ class PruneLocalBranches {
     }
 
     // Show what will be deleted
-    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${branchesToDelete.length} branch${branchesToDelete.length === 1 ? '' : 'es'}:`);
+    output(`${this.dryRun ? 'Would delete' : 'Deleting'} ${branchesToDelete.length} local branch${branchesToDelete.length === 1 ? '' : 'es'}:`);
     
-    // Use progress bar only if we have a TTY, otherwise use simple logging
-    const isTTY = process.stderr.isTTY;
+    // Only show progress bar in verbose mode and if we have a TTY
     let bar: ProgressBar | null = null;
     
-    if (isTTY) {
+    if (isVerbose() && process.stderr.isTTY) {
       bar = new ProgressBar(":bar :branch (:current/:total)", {
         total: branchesToDelete.length,
         width: 30,
@@ -210,7 +226,7 @@ class PruneLocalBranches {
           if (bar) {
             bar.interrupt(message);
           } else {
-            console.log(message);
+            output(`  ${message}`);
           }
         } else {
           deleteLocalBranch(branch.name);
@@ -218,7 +234,7 @@ class PruneLocalBranches {
           if (bar) {
             bar.interrupt(message);
           } else {
-            console.log(message);
+            output(`  ${message}`);
           }
         }
         deletedCount++;
@@ -227,7 +243,7 @@ class PruneLocalBranches {
         if (bar) {
           bar.interrupt(message);
         } else {
-          console.log(message);
+          outputError(`  ${message}`);
         }
         errorCount++;
       }
@@ -239,18 +255,20 @@ class PruneLocalBranches {
     }
 
     // Summary
-    console.log(`\nSummary:`);
+    const summaryItems: string[] = [];
     if (this.dryRun) {
-      console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      summaryItems.push(`Would delete: ${deletedCount} local branch${deletedCount === 1 ? '' : 'es'}`);
     } else {
-      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      summaryItems.push(`Successfully deleted: ${deletedCount} local branch${deletedCount === 1 ? '' : 'es'}`);
     }
     
     if (errorCount > 0) {
-      console.log(`  Errors: ${errorCount}`);
+      summaryItems.push(`Errors: ${errorCount}`);
     }
     
-    console.log(`  Skipped (unsafe): ${unsafeBranches.length}`);
+    summaryItems.push(`Skipped (unsafe): ${unsafeBranches.length}`);
+    
+    outputSummary(summaryItems);
   }
 
   private async getMergedPRsMap(): Promise<Map<string, PullRequest>> {

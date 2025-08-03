@@ -338,10 +338,10 @@ describe('PruneLocalBranches', () => {
       const asyncGenerator = (async function* () {})();
       (mockOctokitPlus.getPullRequests as any).mockImplementation(() => asyncGenerator);
 
-      await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
+      await pruneLocalBranchesCommand.handler!({ dryRun: false, verbose: true, _: [], $0: 'ghouls' });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('\nNo branches are safe to delete.');
-      expect(consoleLogSpy).toHaveBeenCalledWith('\nSkipping unsafe branches:');
+      expect(consoleLogSpy).toHaveBeenCalledWith('No local branches are safe to delete.');
+      expect(consoleLogSpy).toHaveBeenCalledWith('\nSkipping 2 unsafe branches:');
       expect(consoleLogSpy).toHaveBeenCalledWith('  - main (current branch)');
       expect(consoleLogSpy).toHaveBeenCalledWith('  - develop (protected branch)');
     });
@@ -373,8 +373,8 @@ describe('PruneLocalBranches', () => {
 
       expect(mockedDeleteLocalBranch).toHaveBeenCalledWith('feature-1');
       expect(mockedDeleteLocalBranch).toHaveBeenCalledWith('feature-2');
-      expect(consoleLogSpy).toHaveBeenCalledWith('Deleted: feature-1 (#1)');
-      expect(consoleLogSpy).toHaveBeenCalledWith('Deleted: feature-2 (#2)');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  Deleted: feature-1 (#1)');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  Deleted: feature-2 (#2)');
     });
 
     it('should simulate deletion in dry-run mode', async () => {
@@ -398,8 +398,8 @@ describe('PruneLocalBranches', () => {
       await pruneLocalBranchesCommand.handler!({ dryRun: true, _: [], $0: 'ghouls' });
 
       expect(mockedDeleteLocalBranch).not.toHaveBeenCalled();
-      expect(consoleLogSpy).toHaveBeenCalledWith('[DRY RUN] Would delete: feature-1 (#1)');
-      expect(consoleLogSpy).toHaveBeenCalledWith('  Would delete: 1 branch');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  [DRY RUN] Would delete: feature-1 (#1)');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  Would delete: 1 local branch');
     });
 
     it('should handle branches without matching PRs', async () => {
@@ -419,7 +419,7 @@ describe('PruneLocalBranches', () => {
 
       await pruneLocalBranchesCommand.handler!({ dryRun: true, _: [], $0: 'ghouls' });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('[DRY RUN] Would delete: feature-no-pr (no PR)');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  [DRY RUN] Would delete: feature-no-pr (no PR)');
     });
 
     it('should handle deletion errors', async () => {
