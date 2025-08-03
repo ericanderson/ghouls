@@ -1,6 +1,7 @@
 # Ghouls
 
-![Ghouls Logo](logo.webp)
+<img src="logo.webp" alt="Ghouls Logo" width="200">
+
 
 The ghouls can help you.
 
