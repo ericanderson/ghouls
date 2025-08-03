@@ -1,4 +1,4 @@
-import { CommandModule } from "yargs";
+import type { CommandModule } from "yargs";
 import { getConfig } from "../utils/getConfig.js";
 import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import ProgressBar from "progress";
@@ -11,6 +11,7 @@ import {
   isGitRepository 
 } from "../utils/localGitOperations.js";
 import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
+import inquirer from "inquirer";
 
 export const pruneLocalBranchesCommand: CommandModule = {
   handler: async (args: any) => {
@@ -39,18 +40,26 @@ export const pruneLocalBranchesCommand: CommandModule = {
     const pruneLocalBranches = new PruneLocalBranches(
       createOctokitPlus(getConfig()),
       args.dryRun,
+      args.force,
       owner,
       repo
     );
 
     await pruneLocalBranches.perform();
   },
-  command: "pruneLocalBranches [--dry-run] [repo]",
-  describe: "Prunes local branches that have been merged via pull requests",
+  command: "pruneLocalBranches [--dry-run] [--force] [repo]",
+  describe: "Interactively delete local branches that have been merged",
   builder: yargs =>
     yargs
       .env()
-      .boolean("dry-run")
+      .option("dry-run", {
+        type: "boolean",
+        description: "Perform a dry run (show what would be deleted)"
+      })
+      .option("force", {
+        type: "boolean",
+        description: "Skip interactive mode and delete all safe branches automatically"
+      })
       .positional("repo", {
         type: "string",
         coerce: (s: string | undefined) => {
@@ -85,6 +94,7 @@ class PruneLocalBranches {
   constructor(
     private octokitPlus: OctokitPlus,
     private dryRun: boolean,
+    private force: boolean,
     private owner: string,
     private repo: string
   ) {}
@@ -130,8 +140,43 @@ class PruneLocalBranches {
       return;
     }
 
+    // Get branches to delete based on mode
+    let branchesToDelete = safeBranches;
+    
+    if (!this.force && !this.dryRun) {
+      // Interactive mode
+      const choices = safeBranches.map(({ branch, matchingPR }) => {
+        const prInfo = matchingPR ? `PR #${matchingPR.number}` : 'no PR';
+        const lastCommit = branch.lastCommitDate ? new Date(branch.lastCommitDate).toLocaleDateString() : 'unknown';
+        return {
+          name: `${branch.name} (${prInfo}, last commit: ${lastCommit})`,
+          value: branch.name,
+          checked: true
+        };
+      });
+
+      const { selectedBranches } = await inquirer.prompt([
+        {
+          type: 'checkbox',
+          name: 'selectedBranches',
+          message: 'Select branches to delete:',
+          choices,
+          pageSize: 20
+        }
+      ]);
+
+      if (selectedBranches.length === 0) {
+        console.log("\nNo branches selected for deletion.");
+        return;
+      }
+
+      branchesToDelete = safeBranches.filter(({ branch }) => 
+        selectedBranches.includes(branch.name)
+      );
+    }
+
     // Show what will be deleted
-    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${safeBranches.length} branch${safeBranches.length === 1 ? '' : 'es'}:`);
+    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${branchesToDelete.length} branch${branchesToDelete.length === 1 ? '' : 'es'}:`);
     
     // Use progress bar only if we have a TTY, otherwise use simple logging
     const isTTY = process.stderr.isTTY;
@@ -139,7 +184,7 @@ class PruneLocalBranches {
     
     if (isTTY) {
       bar = new ProgressBar(":bar :branch (:current/:total)", {
-        total: safeBranches.length,
+        total: branchesToDelete.length,
         width: 30,
         stream: process.stderr
       });
@@ -148,7 +193,7 @@ class PruneLocalBranches {
     let deletedCount = 0;
     let errorCount = 0;
 
-    for (const { branch, matchingPR } of safeBranches) {
+    for (const { branch, matchingPR } of branchesToDelete) {
       const prInfo = matchingPR ? `#${matchingPR.number}` : 'no PR';
       
       if (bar) {
@@ -185,7 +230,7 @@ class PruneLocalBranches {
     }
 
     if (bar) {
-      bar.update(safeBranches.length, { branch: "" });
+      bar.update(branchesToDelete.length, { branch: "" });
       bar.terminate();
     }
 

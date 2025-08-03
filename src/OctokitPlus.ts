@@ -37,6 +37,8 @@ export interface PullRequest {
   head: PullRequestReference;
   base: PullRequestReference;
   merge_commit_sha: string | null;
+  merged_at?: string | null;
+  title?: string;
 }
 
 function convert404(e: any) {

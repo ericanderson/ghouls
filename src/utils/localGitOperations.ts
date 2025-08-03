@@ -4,6 +4,7 @@ export interface LocalBranch {
   name: string;
   sha: string;
   isCurrent: boolean;
+  lastCommitDate?: string;
 }
 
 export interface BranchStatus {
@@ -16,8 +17,8 @@ export interface BranchStatus {
  */
 export function getLocalBranches(): LocalBranch[] {
   try {
-    // Get all local branches with their SHAs and current branch indicator
-    const { stdout } = execaSync("git", ["branch", "-v", "--format=%(refname:short)|%(objectname)|%(HEAD)"], {
+    // Get all local branches with their SHAs, current branch indicator, and commit date
+    const { stdout } = execaSync("git", ["branch", "-v", "--format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)"], {
       timeout: 10000,
       reject: false
     });
@@ -31,14 +32,15 @@ export function getLocalBranches(): LocalBranch[] {
       .filter(line => line.trim())
       .map(line => {
         const parts = line.split("|");
-        if (parts.length !== 3) {
+        if (parts.length !== 4) {
           throw new Error(`Unexpected git branch output format: ${line}`);
         }
         
         return {
           name: parts[0].trim(),
           sha: parts[1].trim(),
-          isCurrent: parts[2].trim() === "*"
+          isCurrent: parts[2].trim() === "*",
+          lastCommitDate: parts[3].trim()
         };
       });
   } catch (error) {

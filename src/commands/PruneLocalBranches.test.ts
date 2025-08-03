@@ -12,6 +12,7 @@ import {
 import { filterSafeBranches } from '../utils/branchSafetyChecks.js';
 import type { LocalBranch } from '../utils/localGitOperations.js';
 import type { PullRequest, OctokitPlus } from '../OctokitPlus.js';
+import inquirer from 'inquirer';
 
 // Mock all dependencies
 vi.mock('../../src/utils/getConfig.js');
@@ -20,6 +21,7 @@ vi.mock('../../src/utils/getGitRemote.js');
 vi.mock('../../src/utils/localGitOperations.js');
 vi.mock('../../src/utils/branchSafetyChecks.js');
 vi.mock('progress');
+vi.mock('inquirer');
 
 const mockedGetConfig = vi.mocked(getConfig);
 const mockedCreateOctokitPlus = vi.mocked(createOctokitPlus);
@@ -29,6 +31,7 @@ const mockedGetCurrentBranch = vi.mocked(getCurrentBranch);
 const mockedDeleteLocalBranch = vi.mocked(deleteLocalBranch);
 const mockedIsGitRepository = vi.mocked(isGitRepository);
 const mockedFilterSafeBranches = vi.mocked(filterSafeBranches);
+const mockedInquirer = vi.mocked(inquirer);
 
 describe('PruneLocalBranches', () => {
   let mockOctokitPlus: OctokitPlus;
@@ -76,6 +79,19 @@ describe('PruneLocalBranches', () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
+    // Mock inquirer.prompt to auto-select all branches by default
+    (mockedInquirer.prompt as any).mockImplementation(async (questions: any) => {
+      if (Array.isArray(questions) && questions[0]?.type === 'checkbox') {
+        // Return all checked choices
+        const choices = questions[0].choices;
+        const selectedValues = choices
+          .filter((choice: any) => choice.checked !== false)
+          .map((choice: any) => choice.value);
+        return { [questions[0].name]: selectedValues };
+      }
+      return {};
+    });
+
     // Mock process.stderr.isTTY
     Object.defineProperty(process.stderr, 'isTTY', {
       value: false,
@@ -106,21 +122,22 @@ describe('PruneLocalBranches', () => {
 
   describe('command configuration', () => {
     it('should have correct command definition', () => {
-      expect(pruneLocalBranchesCommand.command).toBe('pruneLocalBranches [--dry-run] [repo]');
-      expect(pruneLocalBranchesCommand.describe).toBe('Prunes local branches that have been merged via pull requests');
+      expect(pruneLocalBranchesCommand.command).toBe('pruneLocalBranches [--dry-run] [--force] [repo]');
+      expect(pruneLocalBranchesCommand.describe).toBe('Interactively delete local branches that have been merged');
     });
 
     it('should configure yargs builder correctly', () => {
       const mockYargs = {
         env: vi.fn().mockReturnThis(),
-        boolean: vi.fn().mockReturnThis(),
+        option: vi.fn().mockReturnThis(),
         positional: vi.fn().mockReturnThis()
       };
 
       (pruneLocalBranchesCommand.builder as any)(mockYargs);
 
       expect(mockYargs.env).toHaveBeenCalled();
-      expect(mockYargs.boolean).toHaveBeenCalledWith('dry-run');
+      expect(mockYargs.option).toHaveBeenCalledWith('dry-run', expect.any(Object));
+      expect(mockYargs.option).toHaveBeenCalledWith('force', expect.any(Object));
       expect(mockYargs.positional).toHaveBeenCalledWith('repo', expect.any(Object));
     });
   });
@@ -129,7 +146,7 @@ describe('PruneLocalBranches', () => {
     it('should parse valid repo string', () => {
       const mockYargs = {
         env: vi.fn().mockReturnThis(),
-        boolean: vi.fn().mockReturnThis(),
+        option: vi.fn().mockReturnThis(),
         positional: vi.fn((key, config) => {
           if (key === 'repo' && config.coerce) {
             const result = config.coerce('owner/repo');
@@ -145,7 +162,7 @@ describe('PruneLocalBranches', () => {
     it('should handle undefined repo string', () => {
       const mockYargs = {
         env: vi.fn().mockReturnThis(),
-        boolean: vi.fn().mockReturnThis(),
+        option: vi.fn().mockReturnThis(),
         positional: vi.fn((key, config) => {
           if (key === 'repo' && config.coerce) {
             const result = config.coerce(undefined);
@@ -161,7 +178,7 @@ describe('PruneLocalBranches', () => {
     it('should reject invalid repo format', () => {
       const mockYargs = {
         env: vi.fn().mockReturnThis(),
-        boolean: vi.fn().mockReturnThis(),
+        option: vi.fn().mockReturnThis(),
         positional: vi.fn((key, config) => {
           if (key === 'repo' && config.coerce) {
             expect(() => config.coerce('invalid')).toThrow('Repository must be in the format \'owner/repo\'');
@@ -178,7 +195,7 @@ describe('PruneLocalBranches', () => {
     it('should validate owner name format', () => {
       const mockYargs = {
         env: vi.fn().mockReturnThis(),
-        boolean: vi.fn().mockReturnThis(),
+        option: vi.fn().mockReturnThis(),
         positional: vi.fn((key, config) => {
           if (key === 'repo' && config.coerce) {
             expect(() => config.coerce('-invalid/repo')).toThrow('Invalid owner name');
@@ -195,7 +212,7 @@ describe('PruneLocalBranches', () => {
     it('should validate repo name format', () => {
       const mockYargs = {
         env: vi.fn().mockReturnThis(),
-        boolean: vi.fn().mockReturnThis(),
+        option: vi.fn().mockReturnThis(),
         positional: vi.fn((key, config) => {
           if (key === 'repo' && config.coerce) {
             expect(() => config.coerce('owner/in@valid')).toThrow('Invalid repository name');
