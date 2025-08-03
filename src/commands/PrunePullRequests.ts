@@ -35,8 +35,8 @@ export const prunePullRequestsCommand: CommandModule = {
 
     await prunePullRequest.perform();
   },
-  command: "prunePullRequests [--dry-run] [--force] [repo]",
-  describe: "Interactively delete remote branches that have been merged",
+  command: "remote [--dry-run] [--force] [repo]",
+  describe: "Delete merged remote branches from pull requests",
   builder: yargs =>
     yargs
       .env()

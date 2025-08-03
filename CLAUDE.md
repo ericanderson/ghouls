@@ -45,16 +45,16 @@ The project uses strict TypeScript configuration with:
    - Key methods: `getReference()`, `deleteReference()`, `getPullRequests()`
 
 2. **CLI Entry Point** (`src/cli.ts`): Main command-line interface using yargs
-   - Registers available commands (`prunePullRequests` and `pruneLocalBranches`)
+   - Registers available commands (`remote` and `local`)
    - Handles unhandled promise rejections
 
-3. **PrunePullRequests Command** (`src/commands/PrunePullRequests.ts`): Remote branch cleanup
+3. **Remote Command** (`src/commands/PrunePullRequests.ts`): Remote branch cleanup
    - Iterates through closed pull requests
    - Checks if branch SHA matches PR merge state
    - Deletes remote branches that have been merged (with --dry-run option)
    - Shows progress bar during operation
 
-4. **PruneLocalBranches Command** (`src/commands/PruneLocalBranches.ts`): Local branch cleanup
+4. **Local Command** (`src/commands/PruneLocalBranches.ts`): Local branch cleanup
    - Scans local branches for safe deletion candidates
    - Verifies local branch SHA matches PR head SHA before deletion
    - Protects current branch and branches with unpushed commits
@@ -74,10 +74,10 @@ Ghouls uses GitHub CLI authentication exclusively. Users must have the GitHub CL
 ### Command Usage
 ```bash
 # Remote branch cleanup
-ghouls prunePullRequests [--dry-run] [owner/repo]
+ghouls remote [--dry-run] [owner/repo]
 
 # Local branch cleanup
-ghouls pruneLocalBranches [--dry-run] [owner/repo]
+ghouls local [--dry-run] [owner/repo]
 ```
 
 Both commands support repository auto-detection from git remotes when run within a git repository.
