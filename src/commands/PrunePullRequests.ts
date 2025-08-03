@@ -4,7 +4,7 @@ import ProgressBar from "progress";
 import { PullRequest, OctokitPlus } from "../OctokitPlus.js";
 import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch.js";
 import { getGitRemote } from "../utils/getGitRemote.js";
-import inquirer from "inquirer";
+import { promptWithCancel } from "../utils/promptWithCancel.js";
 
 export const prunePullRequestsCommand: CommandModule = {
   handler: async (args: any) => {
@@ -119,7 +119,7 @@ class PrunePullRequest {
         };
       });
 
-      const { selected } = await inquirer.prompt([
+      const result = await promptWithCancel<{ selected: string[] }>([
         {
           type: 'checkbox',
           name: 'selected',
@@ -129,13 +129,18 @@ class PrunePullRequest {
         }
       ]);
 
-      if (selected.length === 0) {
+      if (result === null) {
+        console.log("\nOperation cancelled by user");
+        return;
+      }
+
+      if (result.selected.length === 0) {
         console.log("\nNo branches selected for deletion.");
         return;
       }
 
       selectedBranches = branchesToDelete.filter(({ ref }) => 
-        selected.includes(ref)
+        result.selected.includes(ref)
       );
     }
 

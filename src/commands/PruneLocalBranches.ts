@@ -10,7 +10,7 @@ import {
   isGitRepository 
 } from "../utils/localGitOperations.js";
 import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
-import inquirer from "inquirer";
+import { promptWithCancel } from "../utils/promptWithCancel.js";
 
 export const pruneLocalBranchesCommand: CommandModule = {
   handler: async (args: any) => {
@@ -154,7 +154,7 @@ class PruneLocalBranches {
         };
       });
 
-      const { selectedBranches } = await inquirer.prompt([
+      const result = await promptWithCancel<{ selectedBranches: string[] }>([
         {
           type: 'checkbox',
           name: 'selectedBranches',
@@ -164,13 +164,18 @@ class PruneLocalBranches {
         }
       ]);
 
-      if (selectedBranches.length === 0) {
+      if (result === null) {
+        console.log("\nOperation cancelled by user");
+        return;
+      }
+
+      if (result.selectedBranches.length === 0) {
         console.log("\nNo branches selected for deletion.");
         return;
       }
 
       branchesToDelete = safeBranches.filter(({ branch }) => 
-        selectedBranches.includes(branch.name)
+        result.selectedBranches.includes(branch.name)
       );
     }
 
