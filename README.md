@@ -33,7 +33,11 @@ Create `~/.config/ghouls.config.json`:
 
 Note: The configuration file is now optional. If not present, ghouls will attempt to use GitHub CLI authentication.
 
-# Prune pull request branches
+# Commands
+
+## Prune remote pull request branches
+
+Safely deletes remote branches that have been merged via pull requests.
 
 Run from within a git repository (auto-detects repo):
 ```bash
@@ -54,6 +58,61 @@ $ ghouls prunePullRequests myorg/myrepo
 #1799 - Deleting remote: heads/fix-yarn-for-1.24
 #1758 - Skipping remote: heads/ml/search-polish (mismatched refs)
 ...
+```
+
+## Prune local branches
+
+Safely deletes local branches that have been merged via pull requests. This command includes comprehensive safety checks to protect important branches and work in progress.
+
+Run from within a git repository (auto-detects repo):
+```bash
+ghouls pruneLocalBranches --dry-run
+```
+
+Or specify a repository explicitly:
+```bash
+ghouls pruneLocalBranches --dry-run myorg/myrepo
+```
+
+### Safety Features
+
+The `pruneLocalBranches` command includes several safety checks to prevent accidental deletion of important branches:
+
+- **Current branch protection**: Never deletes the currently checked out branch
+- **Protected branch names**: Automatically protects `main`, `master`, `develop`, `dev`, `staging`, `production`, and `prod` branches
+- **SHA verification**: Only deletes branches where the local SHA matches the pull request head SHA
+- **Merge verification**: Only considers pull requests that were actually merged (not just closed)
+- **Unpushed commits protection**: Skips branches that have unpushed commits
+- **Dry-run mode**: Use `--dry-run` to see what would be deleted without making changes
+
+### Example Output
+
+```
+$ ghouls pruneLocalBranches --dry-run
+
+Scanning for local branches that can be safely deleted...
+Found 15 local branches
+Fetching merged pull requests from GitHub...
+Found 42 merged pull requests
+
+Branch Analysis:
+  Safe to delete: 3
+  Unsafe to delete: 12
+
+Skipping unsafe branches:
+  - main (protected branch)
+  - feature/wip-work (2 unpushed commits)
+  - fix/critical-bug (current branch)
+  - hotfix/emergency (SHA mismatch with PR head)
+
+Would delete 3 branches:
+[DRY RUN] Would delete: feature/user-auth (#123)
+[DRY RUN] Would delete: fix/typo-fix (#124)
+[DRY RUN] Would delete: refactor/cleanup (#125)
+
+Summary:
+  Would delete: 3 branches
+  Skipped (unsafe): 12
 ```
 
 # Development

@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { existsSync } from 'fs';
 import untildify from 'untildify';
 import convict from 'convict';
-import { getConfig } from '../../src/utils/getConfig.js';
-import { getGhToken } from '../../src/utils/getGhToken.js';
-import { getGhUsername } from '../../src/utils/getGhUsername.js';
-import { getGhBaseUrl } from '../../src/utils/getGhBaseUrl.js';
+import { getConfig } from './getConfig.js';
+import { getGhToken } from './getGhToken.js';
+import { getGhUsername } from './getGhUsername.js';
+import { getGhBaseUrl } from './getGhBaseUrl.js';
 
 // Mock all dependencies
 vi.mock('fs');

@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, expect } from 'vitest';
 
 // Global test setup and utilities
 
@@ -12,6 +12,7 @@ export function createMockExecaResult(overrides: Partial<{
   failed: boolean;
   timedOut: boolean;
   command: string;
+  killed: boolean;
 }>) {
   return {
     stdout: '',
@@ -24,7 +25,7 @@ export function createMockExecaResult(overrides: Partial<{
     isCanceled: false,
     killed: false,
     ...overrides
-  };
+  } as any;
 }
 
 /**
