@@ -88,57 +88,52 @@ describe('getGhToken', () => {
     expect(result).toBe(null);
   });
 
-  it('should return null when gh command fails', () => {
-    mockedExecaSync.mockReturnValue(createMockExecaResult({
+  it('should throw when gh command fails', () => {
+    const mockResult = createMockExecaResult({
       stdout: '',
       stderr: 'gh: command not found',
       exitCode: 127,
       command: 'gh auth token',
       failed: true
-    }));
+    });
+    mockedExecaSync.mockReturnValue(mockResult);
 
-    const result = getGhToken();
-
-    expect(result).toBe(null);
+    expect(() => getGhToken()).toThrow();
   });
 
-  it('should return null when execaSync throws an exception', () => {
+  it('should throw when execaSync throws an exception', () => {
     mockedExecaSync.mockImplementation(() => {
       throw new Error('Command failed');
     });
 
-    const result = getGhToken();
-
-    expect(result).toBe(null);
+    expect(() => getGhToken()).toThrow('Command failed');
   });
 
-  it('should return null when gh is not authenticated', () => {
-    mockedExecaSync.mockReturnValue(createMockExecaResult({
+  it('should throw when gh is not authenticated', () => {
+    const mockResult = createMockExecaResult({
       stdout: '',
       stderr: 'gh: To get started with GitHub CLI, please run: gh auth login',
       exitCode: 1,
       command: 'gh auth token',
       failed: true
-    }));
+    });
+    mockedExecaSync.mockReturnValue(mockResult);
 
-    const result = getGhToken();
-
-    expect(result).toBe(null);
+    expect(() => getGhToken()).toThrow();
   });
 
-  it('should handle timeout correctly', () => {
-    mockedExecaSync.mockReturnValue(createMockExecaResult({
+  it('should throw when timeout occurs', () => {
+    const mockResult = createMockExecaResult({
       stdout: '',
       stderr: '',
       exitCode: 124,
       command: 'gh auth token',
       failed: true,
       timedOut: true
-    }));
+    });
+    mockedExecaSync.mockReturnValue(mockResult);
 
-    const result = getGhToken();
-
-    expect(result).toBe(null);
+    expect(() => getGhToken()).toThrow();
     expect(mockedExecaSync).toHaveBeenCalledWith('gh', ['auth', 'token'], {
       timeout: 10000,
       reject: false

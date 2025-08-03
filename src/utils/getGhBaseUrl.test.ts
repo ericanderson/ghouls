@@ -116,28 +116,25 @@ describe('getGhBaseUrl', () => {
     expect(result).toBe('https://api.github.com');
   });
 
-  it('should default to github.com when gh command is not found', () => {
-    mockedExecaSync.mockReturnValue(createMockExecaResult({
+  it('should throw when gh command is not found', () => {
+    const mockResult = createMockExecaResult({
       stdout: '',
       stderr: 'gh: command not found',
       exitCode: 127,
       command: 'gh auth status',
       failed: true
-    }));
+    });
+    mockedExecaSync.mockReturnValue(mockResult);
 
-    const result = getGhBaseUrl();
-
-    expect(result).toBe('https://api.github.com');
+    expect(() => getGhBaseUrl()).toThrow();
   });
 
-  it('should default to github.com when execaSync throws an exception', () => {
+  it('should throw when execaSync throws an exception', () => {
     mockedExecaSync.mockImplementation(() => {
       throw new Error('Command failed');
     });
 
-    const result = getGhBaseUrl();
-
-    expect(result).toBe('https://api.github.com');
+    expect(() => getGhBaseUrl()).toThrow('Command failed');
   });
 
   it('should handle timeout correctly', () => {

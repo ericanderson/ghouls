@@ -2,16 +2,35 @@ import { Octokit } from "@octokit/rest";
 import { OctokitPlus } from "../OctokitPlus.js";
 import { getGhToken } from "./getGhToken.js";
 import { getGhBaseUrl } from "./getGhBaseUrl.js";
+import { detectGhCliError, formatGhCliError } from "./ghCliErrorHandler.js";
 
 export function createOctokitPlus() {
-  const token = getGhToken();
+  let token: string | null;
+  let baseUrl: string;
+
+  try {
+    token = getGhToken();
+  } catch (error) {
+    const ghError = detectGhCliError(error);
+    if (ghError) {
+      throw new Error(formatGhCliError(ghError));
+    }
+    throw error;
+  }
+
   if (!token) {
     throw new Error("No GitHub token found. Please authenticate with 'gh auth login'");
   }
 
-  const baseUrl = getGhBaseUrl();
-  if (!baseUrl) {
-    throw new Error("No GitHub API base URL found. This should not happen - please report this issue.");
+  try {
+    baseUrl = getGhBaseUrl();
+  } catch (error) {
+    const ghError = detectGhCliError(error);
+    if (ghError) {
+      throw new Error(formatGhCliError(ghError));
+    }
+    // If gh is not installed but we got here, default to github.com
+    baseUrl = "https://api.github.com";
   }
 
   const octokit = new Octokit({

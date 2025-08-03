@@ -1,16 +1,18 @@
 import { execaSync } from "execa";
 
 export function getGhBaseUrl(): string {
-  try {
-    // Check if gh is authenticated to any hosts
-    // Note: gh auth status outputs to stderr, not stdout
-    const { stderr, stdout } = execaSync("gh", ["auth", "status"], {
-      timeout: 10000, // 10 second timeout
-      reject: false
-    });
+  const result = execaSync("gh", ["auth", "status"], {
+    timeout: 10000, // 10 second timeout
+    reject: false
+  });
 
-    // gh auth status outputs to stderr, so check both stdout and stderr
-    const hostsOutput = stderr || stdout || "";
+  // Check if the command failed due to gh not being installed
+  if (result.failed && result.exitCode === 127) {
+    throw result;
+  }
+
+  // gh auth status outputs to stderr, so check both stdout and stderr
+  const hostsOutput = result.stderr || result.stdout || "";
     
     // Extract the host from the output (looking for lines like "github.com" or custom enterprise hosts)
     // Look for patterns like "✓ Logged in to github.com" or similar
@@ -31,8 +33,4 @@ export function getGhBaseUrl(): string {
     
     // Default to github.com
     return "https://api.github.com";
-  } catch (error) {
-    // Default to github.com if gh CLI is not configured
-    return "https://api.github.com";
-  }
 }
