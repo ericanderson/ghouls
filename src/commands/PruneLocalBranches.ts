@@ -10,6 +10,7 @@ import {
   isGitRepository 
 } from "../utils/localGitOperations.js";
 import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
+import { loadSafetyConfigSafe } from "../utils/configLoader.js";
 import inquirer from "inquirer";
 
 export const pruneLocalBranchesCommand: CommandModule = {
@@ -101,6 +102,9 @@ class PruneLocalBranches {
   public async perform() {
     console.log(`\nScanning for local branches that can be safely deleted...`);
     
+    // Load configuration
+    const config = loadSafetyConfigSafe(true); // Log errors if config loading fails
+    
     // Get all local branches
     const localBranches = getLocalBranches();
     const currentBranch = getCurrentBranch();
@@ -118,7 +122,7 @@ class PruneLocalBranches {
     console.log(`Found ${mergedPRs.size} merged pull requests`);
 
     // Filter branches for safety
-    const branchAnalysis = filterSafeBranches(localBranches, currentBranch, mergedPRs);
+    const branchAnalysis = filterSafeBranches(localBranches, currentBranch, mergedPRs, config);
     const safeBranches = branchAnalysis.filter(analysis => analysis.safetyCheck.safe);
     const unsafeBranches = branchAnalysis.filter(analysis => !analysis.safetyCheck.safe);
 

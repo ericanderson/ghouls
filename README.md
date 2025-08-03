@@ -250,3 +250,180 @@ pnpm test:coverage
 ```
 
 The test suite includes comprehensive unit tests covering all core functionality, utilities, and edge cases.
+
+# Configuration
+
+Ghouls supports per-project configuration files to customize branch safety rules. This allows you to override default protected branches and add custom safety patterns specific to your project's workflow.
+
+## Configuration File Locations
+
+Ghouls looks for configuration files in the following order (first found takes precedence):
+
+1. **Environment variable**: `GHOULS_CONFIG=/path/to/config.json`
+2. **Repository root**: `.ghouls.json`, `.ghoulsrc.json`, or `ghouls.config.json`
+3. **User home**: `~/.config/ghouls/config.json`
+
+## Configuration Format
+
+Create a JSON file with the following structure:
+
+```json
+{
+  "version": "1.0",
+  "safety": {
+    "protectedBranches": ["main", "master", "production"],
+    "additionalProtectedPatterns": ["release/.*", "hotfix/.*"],
+    "allowUnpushedCommits": false,
+    "requireMergedPR": true,
+    "customSafetyRules": [
+      {
+        "name": "temp-branches",
+        "pattern": "temp/.*",
+        "reason": "temporary experiment branch"
+      }
+    ]
+  }
+}
+```
+
+## Configuration Options
+
+### `protectedBranches` (array of strings)
+List of branch names that should never be deleted (case-insensitive). When specified, this **replaces** the default protected branches.
+
+**Default**: `["main", "master", "develop", "dev", "staging", "production", "prod"]`
+
+```json
+{
+  "safety": {
+    "protectedBranches": ["main", "production", "staging"]
+  }
+}
+```
+
+### `additionalProtectedPatterns` (array of regex strings)
+Additional regex patterns to protect branches. These are **added** to the protection rules without replacing defaults.
+
+```json
+{
+  "safety": {
+    "additionalProtectedPatterns": [
+      "release/.*",     // Protect all release branches
+      "hotfix/.*",      // Protect all hotfix branches
+      "feature/.*-wip$" // Protect WIP feature branches
+    ]
+  }
+}
+```
+
+### `allowUnpushedCommits` (boolean)
+Whether to allow deletion of branches with unpushed commits.
+
+**Default**: `false` (branches with unpushed commits are protected)
+
+```json
+{
+  "safety": {
+    "allowUnpushedCommits": true
+  }
+}
+```
+
+### `requireMergedPR` (boolean)
+Whether to require a merged pull request for branch deletion.
+
+**Default**: `true` (only branches with merged PRs can be deleted)
+
+```json
+{
+  "safety": {
+    "requireMergedPR": false
+  }
+}
+```
+
+### `customSafetyRules` (array of rule objects)
+Custom safety rules with regex patterns and custom error messages.
+
+```json
+{
+  "safety": {
+    "customSafetyRules": [
+      {
+        "name": "wip-branches",
+        "pattern": ".*-wip$",
+        "reason": "work in progress branch"
+      },
+      {
+        "name": "experiment-branches", 
+        "pattern": "^exp/.*",
+        "reason": "experimental feature branch"
+      }
+    ]
+  }
+}
+```
+
+## Example Configurations
+
+### Minimal Configuration
+```json
+{
+  "safety": {
+    "protectedBranches": ["main", "production"]
+  }
+}
+```
+
+### Advanced Team Configuration
+```json
+{
+  "version": "1.0",
+  "safety": {
+    "protectedBranches": ["main", "develop", "staging", "production"],
+    "additionalProtectedPatterns": [
+      "release/v\\d+\\.\\d+\\.\\d+",
+      "hotfix/.*"
+    ],
+    "allowUnpushedCommits": false,
+    "requireMergedPR": true,
+    "customSafetyRules": [
+      {
+        "name": "temp-branches",
+        "pattern": "temp/.*",
+        "reason": "temporary testing branch"
+      },
+      {
+        "name": "wip-branches",
+        "pattern": ".*-wip$",
+        "reason": "work in progress"
+      }
+    ]
+  }
+}
+```
+
+### Relaxed Configuration
+```json
+{
+  "safety": {
+    "protectedBranches": ["main"],
+    "allowUnpushedCommits": true,
+    "requireMergedPR": false
+  }
+}
+```
+
+## Configuration Validation
+
+Ghouls validates configuration files and will show warnings for:
+- Invalid JSON syntax
+- Invalid regex patterns
+- Missing required fields
+- Incorrect data types
+
+Use the `--verbose` flag to see configuration loading details:
+
+```bash
+ghouls local --verbose
+```

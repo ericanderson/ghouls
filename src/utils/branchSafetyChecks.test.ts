@@ -6,6 +6,7 @@ import {
 import { getBranchStatus } from './localGitOperations.js';
 import type { LocalBranch } from './localGitOperations.js';
 import type { PullRequest } from '../OctokitPlus.js';
+import type { SafetyConfig } from '../types/config.js';
 
 // Mock localGitOperations
 vi.mock('../../src/utils/localGitOperations.js');
@@ -464,6 +465,362 @@ describe('branchSafetyChecks', () => {
       expect(mockedGetBranchStatus).toHaveBeenCalledTimes(2);
       expect(mockedGetBranchStatus).toHaveBeenCalledWith('feature-1');
       expect(mockedGetBranchStatus).toHaveBeenCalledWith('feature-2');
+    });
+  });
+
+  describe('configuration support', () => {
+    const createLocalBranch = (name: string, sha: string, isCurrent: boolean = false): LocalBranch => ({
+      name,
+      sha,
+      isCurrent
+    });
+
+    const createPullRequest = (headSha: string, mergeCommitSha?: string): PullRequest => ({
+      id: 123,
+      number: 1,
+      user: { login: 'user' },
+      state: 'closed',
+      head: {
+        label: 'user:feature-branch',
+        ref: 'feature-branch',
+        sha: headSha,
+        repo: {
+          name: 'test-repo',
+          owner: { login: 'user' },
+          fork: false
+        }
+      },
+      base: {
+        label: 'user:main',
+        ref: 'main',
+        sha: 'base-sha',
+        repo: {
+          name: 'test-repo',
+          owner: { login: 'user' },
+          fork: false
+        }
+      },
+      merge_commit_sha: mergeCommitSha || null
+    });
+
+    beforeEach(() => {
+      mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+    });
+
+    describe('custom protected branches', () => {
+      it('should use custom protected branch list', () => {
+        const branch = createLocalBranch('custom-protected', 'abc123');
+        const config: SafetyConfig = {
+          protectedBranches: ['main', 'custom-protected']
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'protected branch'
+        });
+      });
+
+      it('should not protect default branches when custom list provided', () => {
+        const branch = createLocalBranch('develop', 'abc123'); // normally protected
+        const config: SafetyConfig = {
+          protectedBranches: ['main', 'staging'] // develop not included
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({ safe: true });
+      });
+
+      it('should be case-insensitive for custom protected branches', () => {
+        const branch = createLocalBranch('CUSTOM-PROTECTED', 'abc123');
+        const config: SafetyConfig = {
+          protectedBranches: ['main', 'custom-protected']
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'protected branch'
+        });
+      });
+    });
+
+    describe('additional protected patterns', () => {
+      it('should protect branches matching additional patterns', () => {
+        const branch = createLocalBranch('release/v1.0.0', 'abc123');
+        const config: SafetyConfig = {
+          additionalProtectedPatterns: ['release/.*', 'hotfix/.*']
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'matches protected pattern: release/.*'
+        });
+      });
+
+      it('should be case-insensitive for additional patterns', () => {
+        const branch = createLocalBranch('RELEASE/V1.0.0', 'abc123');
+        const config: SafetyConfig = {
+          additionalProtectedPatterns: ['release/.*']
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'matches protected pattern: release/.*'
+        });
+      });
+
+      it('should skip invalid regex patterns', () => {
+        const branch = createLocalBranch('test-branch', 'abc123');
+        const config: SafetyConfig = {
+          additionalProtectedPatterns: ['[invalid-regex', 'valid/.*']
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({ safe: true }); // Should not throw error
+      });
+
+      it('should combine with default protected branches', () => {
+        const mainBranch = createLocalBranch('main', 'abc123');
+        const releaseBranch = createLocalBranch('release/v1.0.0', 'def456');
+        const config: SafetyConfig = {
+          additionalProtectedPatterns: ['release/.*']
+        };
+
+        const mainResult = isBranchSafeToDelete(mainBranch, 'develop', undefined, config);
+        const releaseResult = isBranchSafeToDelete(releaseBranch, 'develop', undefined, config);
+
+        expect(mainResult).toEqual({
+          safe: false,
+          reason: 'protected branch'
+        });
+        expect(releaseResult).toEqual({
+          safe: false,
+          reason: 'matches protected pattern: release/.*'
+        });
+      });
+    });
+
+    describe('custom safety rules', () => {
+      it('should apply custom safety rules', () => {
+        const branch = createLocalBranch('temp/experiment', 'abc123');
+        const config: SafetyConfig = {
+          customSafetyRules: [
+            { name: 'temp-rule', pattern: 'temp/.*', reason: 'temporary experiment branch' }
+          ]
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'temporary experiment branch'
+        });
+      });
+
+      it('should apply multiple custom safety rules', () => {
+        const wipBranch = createLocalBranch('wip/feature', 'abc123');
+        const tempBranch = createLocalBranch('temp/test', 'def456');
+        const config: SafetyConfig = {
+          customSafetyRules: [
+            { name: 'wip-rule', pattern: 'wip/.*', reason: 'work in progress' },
+            { name: 'temp-rule', pattern: 'temp/.*', reason: 'temporary branch' }
+          ]
+        };
+
+        const wipResult = isBranchSafeToDelete(wipBranch, 'main', undefined, config);
+        const tempResult = isBranchSafeToDelete(tempBranch, 'main', undefined, config);
+
+        expect(wipResult).toEqual({
+          safe: false,
+          reason: 'work in progress'
+        });
+        expect(tempResult).toEqual({
+          safe: false,
+          reason: 'temporary branch'
+        });
+      });
+
+      it('should be case-insensitive for custom rules', () => {
+        const branch = createLocalBranch('WIP/FEATURE', 'abc123');
+        const config: SafetyConfig = {
+          customSafetyRules: [
+            { name: 'wip-rule', pattern: 'wip/.*', reason: 'work in progress' }
+          ]
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'work in progress'
+        });
+      });
+
+      it('should skip invalid regex patterns in custom rules', () => {
+        const branch = createLocalBranch('test-branch', 'abc123');
+        const config: SafetyConfig = {
+          customSafetyRules: [
+            { name: 'invalid-rule', pattern: '[invalid-regex', reason: 'should be skipped' },
+            { name: 'valid-rule', pattern: 'valid/.*', reason: 'valid rule' }
+          ]
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({ safe: true }); // Should not throw error
+      });
+    });
+
+    describe('allow unpushed commits', () => {
+      it('should allow deletion when allowUnpushedCommits is true', () => {
+        const branch = createLocalBranch('feature-branch', 'abc123');
+        const config: SafetyConfig = {
+          allowUnpushedCommits: true
+        };
+
+        mockedGetBranchStatus.mockReturnValue({ ahead: 2, behind: 0 });
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({ safe: true });
+      });
+
+      it('should prevent deletion when allowUnpushedCommits is false (default)', () => {
+        const branch = createLocalBranch('feature-branch', 'abc123');
+        const config: SafetyConfig = {
+          allowUnpushedCommits: false
+        };
+
+        mockedGetBranchStatus.mockReturnValue({ ahead: 2, behind: 0 });
+
+        const result = isBranchSafeToDelete(branch, 'main', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: '2 unpushed commits'
+        });
+      });
+    });
+
+    describe('require merged PR', () => {
+      it('should allow deletion of unmerged PR when requireMergedPR is false', () => {
+        const branch = createLocalBranch('feature-branch', 'abc123');
+        const pr = createPullRequest('abc123'); // No merge commit SHA
+        const config: SafetyConfig = {
+          requireMergedPR: false
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', pr, config);
+
+        expect(result).toEqual({ safe: true });
+      });
+
+      it('should prevent deletion of unmerged PR when requireMergedPR is true (default)', () => {
+        const branch = createLocalBranch('feature-branch', 'abc123');
+        const pr = createPullRequest('abc123'); // No merge commit SHA
+        const config: SafetyConfig = {
+          requireMergedPR: true
+        };
+
+        const result = isBranchSafeToDelete(branch, 'main', pr, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'PR was not merged'
+        });
+      });
+    });
+
+    describe('filterSafeBranches with configuration', () => {
+      it('should pass configuration to isBranchSafeToDelete', () => {
+        const branches = [
+          createLocalBranch('custom-protected', 'abc123'),
+          createLocalBranch('release/v1.0.0', 'def456'),
+          createLocalBranch('safe-branch', 'ghi789')
+        ];
+        const config: SafetyConfig = {
+          protectedBranches: ['custom-protected'],
+          additionalProtectedPatterns: ['release/.*']
+        };
+
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = filterSafeBranches(branches, 'main', new Map(), config);
+
+        expect(result).toHaveLength(3);
+        expect(result[0].safetyCheck).toEqual({
+          safe: false,
+          reason: 'protected branch'
+        });
+        expect(result[1].safetyCheck).toEqual({
+          safe: false,
+          reason: 'matches protected pattern: release/.*'
+        });
+        expect(result[2].safetyCheck).toEqual({ safe: true });
+      });
+
+      it('should work without configuration (backward compatibility)', () => {
+        const branches = [
+          createLocalBranch('main', 'abc123'),
+          createLocalBranch('feature-branch', 'def456')
+        ];
+
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = filterSafeBranches(branches, 'develop', new Map());
+
+        expect(result).toHaveLength(2);
+        expect(result[0].safetyCheck).toEqual({
+          safe: false,
+          reason: 'protected branch'
+        });
+        expect(result[1].safetyCheck).toEqual({ safe: true });
+      });
+    });
+
+    describe('configuration precedence and merging', () => {
+      it('should apply configuration rules in correct precedence order', () => {
+        // Test that current branch check still has highest precedence
+        const branch = createLocalBranch('custom-protected', 'abc123', true);
+        const config: SafetyConfig = {
+          protectedBranches: ['custom-protected']
+        };
+
+        const result = isBranchSafeToDelete(branch, 'custom-protected', undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'current branch'
+        });
+      });
+
+      it('should check protected branches before patterns', () => {
+        const branch = createLocalBranch('main', 'abc123');
+        const config: SafetyConfig = {
+          protectedBranches: ['main'],
+          additionalProtectedPatterns: ['main.*'], // Would also match
+          customSafetyRules: [
+            { name: 'main-rule', pattern: 'main', reason: 'custom main rule' }
+          ]
+        };
+
+        const result = isBranchSafeToDelete(branch, 'develop', undefined, config);
+
+        // Should use protected branch reason, not pattern or custom rule
+        expect(result).toEqual({
+          safe: false,
+          reason: 'protected branch'
+        });
+      });
     });
   });
 });
