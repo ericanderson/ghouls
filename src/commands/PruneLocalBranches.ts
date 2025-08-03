@@ -46,8 +46,8 @@ export const pruneLocalBranchesCommand: CommandModule = {
 
     await pruneLocalBranches.perform();
   },
-  command: "pruneLocalBranches [--dry-run] [--force] [repo]",
-  describe: "Interactively delete local branches that have been merged",
+  command: "local [--dry-run] [--force] [repo]",
+  describe: "Delete merged local branches from pull requests",
   builder: yargs =>
     yargs
       .env()

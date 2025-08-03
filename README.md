@@ -2,6 +2,15 @@
 
 The ghouls can help you.
 
+# Breaking Changes
+
+## v2.0.0
+- **Command names have changed:**
+  - `prunePullRequests` → `remote`
+  - `pruneLocalBranches` → `local`
+  
+  If you have scripts using the old commands, please update them to use the new shorter names.
+
 # Getting started
 
 ## Install
@@ -24,24 +33,24 @@ That's it! Ghouls will automatically use your existing GitHub CLI authentication
 
 # Commands
 
-## Prune remote pull request branches
+## Delete remote branches
 
 Safely deletes remote branches that have been merged via pull requests.
 
 Run from within a git repository (auto-detects repo):
 ```bash
-ghouls prunePullRequests --dry-run
+ghouls remote --dry-run
 ```
 
 The auto-detection feature works with both github.com and GitHub Enterprise repositories, automatically detecting the repository owner/name from the remote URL.
 
 Or specify a repository explicitly:
 ```bash
-ghouls prunePullRequests --dry-run myorg/myrepo
+ghouls remote --dry-run myorg/myrepo
 ```
 
 ```
-$ ghouls prunePullRequests myorg/myrepo
+$ ghouls remote myorg/myrepo
 #1871 - Deleting remote: heads/fix/fe-nits
 #1821 - Deleting remote: heads/fix/collaborator-search
 #1799 - Deleting remote: heads/fix-yarn-for-1.24
@@ -49,23 +58,23 @@ $ ghouls prunePullRequests myorg/myrepo
 ...
 ```
 
-## Prune local branches
+## Delete local branches
 
 Safely deletes local branches that have been merged via pull requests. This command includes comprehensive safety checks to protect important branches and work in progress.
 
 Run from within a git repository (auto-detects repo):
 ```bash
-ghouls pruneLocalBranches --dry-run
+ghouls local --dry-run
 ```
 
 Or specify a repository explicitly:
 ```bash
-ghouls pruneLocalBranches --dry-run myorg/myrepo
+ghouls local --dry-run myorg/myrepo
 ```
 
 ### Safety Features
 
-The `pruneLocalBranches` command includes several safety checks to prevent accidental deletion of important branches:
+The `local` command includes several safety checks to prevent accidental deletion of important branches:
 
 - **Current branch protection**: Never deletes the currently checked out branch
 - **Protected branch names**: Automatically protects `main`, `master`, `develop`, `dev`, `staging`, `production`, and `prod` branches
@@ -77,7 +86,7 @@ The `pruneLocalBranches` command includes several safety checks to prevent accid
 ### Example Output
 
 ```
-$ ghouls pruneLocalBranches --dry-run
+$ ghouls local --dry-run
 
 Scanning for local branches that can be safely deleted...
 Found 15 local branches

@@ -114,8 +114,8 @@ describe('PruneLocalBranches', () => {
 
   describe('command configuration', () => {
     it('should have correct command definition', () => {
-      expect(pruneLocalBranchesCommand.command).toBe('pruneLocalBranches [--dry-run] [--force] [repo]');
-      expect(pruneLocalBranchesCommand.describe).toBe('Interactively delete local branches that have been merged');
+      expect(pruneLocalBranchesCommand.command).toBe('local [--dry-run] [--force] [repo]');
+      expect(pruneLocalBranchesCommand.describe).toBe('Delete merged local branches from pull requests');
     });
 
     it('should configure yargs builder correctly', () => {
