@@ -140,6 +140,7 @@ The `local` command includes several safety checks to prevent accidental deletio
 
 - **Current branch protection**: Never deletes the currently checked out branch
 - **Protected branch names**: Automatically protects `main`, `master`, `develop`, `dev`, `staging`, `production`, and `prod` branches
+- **Release and hotfix branch protection**: Automatically protects release branches (`release/*`, `release-*`) and hotfix branches (`hotfix/*`)
 - **SHA verification**: Only deletes branches where the local SHA matches the pull request head SHA
 - **Merge verification**: Only considers pull requests that were actually merged (not just closed)
 - **Unpushed commits protection**: Skips branches that have unpushed commits
