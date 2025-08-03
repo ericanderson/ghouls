@@ -1,15 +1,17 @@
 import { execaSync } from "execa";
 
 export function getGhToken(): string | null {
-  try {
-    const { stdout } = execaSync("gh", ["auth", "token"], {
-      timeout: 10000, // 10 second timeout
-      reject: false
-    });
+  const result = execaSync("gh", ["auth", "token"], {
+    timeout: 10000, // 10 second timeout
+    reject: false
+  });
 
-    const token = stdout?.trim();
-    return token || null;
-  } catch (error) {
-    return null;
+  // Check if the command failed
+  if (result.failed) {
+    // Re-throw as an error so it can be caught and analyzed by createOctokitPlus
+    throw result;
   }
+
+  const token = result.stdout?.trim();
+  return token || null;
 }
