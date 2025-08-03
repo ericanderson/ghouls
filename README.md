@@ -1,18 +1,9 @@
 # Ghouls
 
-<img src="logo.webp" alt="Ghouls Logo" width="200">
+Remove those pesky dead branches
 
+<img src="logo.webp" alt="Ghouls Logo" width="400">
 
-The ghouls can help you.
-
-# Breaking Changes
-
-## v2.0.0
-- **Command names have changed:**
-  - `prunePullRequests` → `remote`
-  - `pruneLocalBranches` → `local`
-  
-  If you have scripts using the old commands, please update them to use the new shorter names.
 
 # Getting started
 
