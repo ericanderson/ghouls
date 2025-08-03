@@ -42,7 +42,7 @@ export function isGhNotInstalledError(error: ExecaSyncError): boolean {
   }
 
   // Check stderr for common "command not found" messages
-  const stderr = error.stderr?.toLowerCase() || "";
+  const stderr = typeof error.stderr === 'string' ? error.stderr.toLowerCase() : "";
   if (stderr.includes("command not found") || 
       stderr.includes("not found") ||
       stderr.includes("cannot find")) {
@@ -58,8 +58,8 @@ export function isGhNotInstalledError(error: ExecaSyncError): boolean {
 }
 
 export function isGhNotAuthenticatedError(error: ExecaSyncError): boolean {
-  const stderr = error.stderr || "";
-  const stdout = error.stdout || "";
+  const stderr = typeof error.stderr === 'string' ? error.stderr : "";
+  const stdout = typeof error.stdout === 'string' ? error.stdout : "";
   const combined = `${stderr} ${stdout}`.toLowerCase();
 
   // Check for authentication-related messages
