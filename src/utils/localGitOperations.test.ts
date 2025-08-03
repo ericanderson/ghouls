@@ -24,17 +24,17 @@ describe('localGitOperations', () => {
 
   describe('getLocalBranches', () => {
     it('should return local branches with correct format', () => {
-      const mockOutput = 'main|abc123|*\nfeature/test|def456|\ndevelop|ghi789|';
+      const mockOutput = 'main|abc123|*|2024-01-01 10:00:00 -0500\nfeature/test|def456||2024-01-02 11:00:00 -0500\ndevelop|ghi789||2024-01-03 12:00:00 -0500';
       mockedExecaSync.mockReturnValue(createMockExecaResult({
         stdout: mockOutput,
-        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)'
+        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)'
       }));
 
       const result = getLocalBranches();
 
       expect(mockedExecaSync).toHaveBeenCalledWith(
         'git',
-        ['branch', '-v', '--format=%(refname:short)|%(objectname)|%(HEAD)'],
+        ['branch', '-v', '--format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)'],
         {
           timeout: 10000,
           reject: false
@@ -42,9 +42,9 @@ describe('localGitOperations', () => {
       );
 
       expect(result).toEqual([
-        { name: 'main', sha: 'abc123', isCurrent: true },
-        { name: 'feature/test', sha: 'def456', isCurrent: false },
-        { name: 'develop', sha: 'ghi789', isCurrent: false }
+        { name: 'main', sha: 'abc123', isCurrent: true, lastCommitDate: '2024-01-01 10:00:00 -0500' },
+        { name: 'feature/test', sha: 'def456', isCurrent: false, lastCommitDate: '2024-01-02 11:00:00 -0500' },
+        { name: 'develop', sha: 'ghi789', isCurrent: false, lastCommitDate: '2024-01-03 12:00:00 -0500' }
       ]);
     });
 
@@ -60,32 +60,32 @@ describe('localGitOperations', () => {
     });
 
     it('should filter out empty lines', () => {
-      const mockOutput = 'main|abc123|*\n\n\nfeature/test|def456|\n\n';
+      const mockOutput = 'main|abc123|*|2024-01-01 10:00:00 -0500\n\n\nfeature/test|def456||2024-01-02 11:00:00 -0500\n\n';
       mockedExecaSync.mockReturnValue(createMockExecaResult({
         stdout: mockOutput,
-        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)'
+        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)'
       }));
 
       const result = getLocalBranches();
 
       expect(result).toEqual([
-        { name: 'main', sha: 'abc123', isCurrent: true },
-        { name: 'feature/test', sha: 'def456', isCurrent: false }
+        { name: 'main', sha: 'abc123', isCurrent: true, lastCommitDate: '2024-01-01 10:00:00 -0500' },
+        { name: 'feature/test', sha: 'def456', isCurrent: false, lastCommitDate: '2024-01-02 11:00:00 -0500' }
       ]);
     });
 
     it('should handle branches with spaces in names', () => {
-      const mockOutput = 'feature branch|abc123|\ntest-branch|def456|*';
+      const mockOutput = 'feature branch|abc123||2024-01-01 10:00:00 -0500\ntest-branch|def456|*|2024-01-02 11:00:00 -0500';
       mockedExecaSync.mockReturnValue(createMockExecaResult({
         stdout: mockOutput,
-        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)'
+        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)'
       }));
 
       const result = getLocalBranches();
 
       expect(result).toEqual([
-        { name: 'feature branch', sha: 'abc123', isCurrent: false },
-        { name: 'test-branch', sha: 'def456', isCurrent: true }
+        { name: 'feature branch', sha: 'abc123', isCurrent: false, lastCommitDate: '2024-01-01 10:00:00 -0500' },
+        { name: 'test-branch', sha: 'def456', isCurrent: true, lastCommitDate: '2024-01-02 11:00:00 -0500' }
       ]);
     });
 
@@ -117,8 +117,8 @@ describe('localGitOperations', () => {
 
     it('should use correct timeout for git command', () => {
       mockedExecaSync.mockReturnValue(createMockExecaResult({
-        stdout: 'main|abc123|*',
-        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)'
+        stdout: 'main|abc123|*|2024-01-01 10:00:00 -0500',
+        command: 'git branch -v --format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)'
       }));
 
       getLocalBranches();
