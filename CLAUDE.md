@@ -63,19 +63,13 @@ The project uses strict TypeScript configuration with:
 
 5. **Utilities** (`src/utils/`):
    - `createOctokitPlus.ts`: Factory for creating authenticated Octokit instances
-   - `getConfig.ts`: Loads configuration from `~/.config/ghouls.config.json`
    - `ownerAndRepoMatch.ts`: Validates PR head/base repository matching
    - `localGitOperations.ts`: Local git operations (list branches, get status, delete branches)
    - `branchSafetyChecks.ts`: Safety validation for branch deletion
    - `getGitRemote.ts`: Git remote URL parsing and repository detection
 
-### Configuration
-Users can optionally create `~/.config/ghouls.config.json` with:
-- `username`: GitHub username
-- `token`: GitHub personal access token
-- `baseUrl`: GitHub API endpoint (for GitHub Enterprise)
-
-If no configuration file is present, ghouls will attempt to use GitHub CLI authentication.
+### Authentication
+Ghouls uses GitHub CLI authentication exclusively. Users must have the GitHub CLI (`gh`) installed and authenticated with `gh auth login`. The tool automatically uses the existing GitHub CLI authentication credentials.
 
 ### Command Usage
 ```bash
@@ -98,7 +92,6 @@ Both commands support repository auto-detection from git remotes when run within
 - CLI Framework: yargs for command-line interface
 - GitHub API: @octokit/rest for GitHub API interactions
 - Build System: TypeScript compiler with pnpm package manager
-- Configuration: convict for config management
 - Package Management: pnpm with semantic-release
 - Test Framework: Vitest with comprehensive unit tests
 

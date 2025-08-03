@@ -1,4 +1,4 @@
-import { vi, expect } from 'vitest';
+import { expect } from 'vitest';
 
 // Global test setup and utilities
 
@@ -26,17 +26,6 @@ export function createMockExecaResult(overrides: Partial<{
     killed: false,
     ...overrides
   } as any;
-}
-
-/**
- * Helper to create a mock convict config object
- */
-export function createMockConvictConfig() {
-  return {
-    loadFile: vi.fn(),
-    validate: vi.fn(),
-    getProperties: vi.fn()
-  };
 }
 
 /**

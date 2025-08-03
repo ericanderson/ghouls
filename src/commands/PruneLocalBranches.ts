@@ -1,5 +1,4 @@
 import type { CommandModule } from "yargs";
-import { getConfig } from "../utils/getConfig.js";
 import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import ProgressBar from "progress";
 import { PullRequest, OctokitPlus } from "../OctokitPlus.js";
@@ -38,7 +37,7 @@ export const pruneLocalBranchesCommand: CommandModule = {
     }
 
     const pruneLocalBranches = new PruneLocalBranches(
-      createOctokitPlus(getConfig()),
+      createOctokitPlus(),
       args.dryRun,
       args.force,
       owner,
