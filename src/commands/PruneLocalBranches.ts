@@ -1,4 +1,4 @@
-import { CommandModule } from "yargs";
+import type { CommandModule } from "yargs";
 import { getConfig } from "../utils/getConfig.js";
 import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import ProgressBar from "progress";
