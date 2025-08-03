@@ -10,7 +10,13 @@ import {
   isGitRepository 
 } from "../utils/localGitOperations.js";
 import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
-import inquirer from "inquirer";
+import { createPaginatedCheckboxPrompt, EnhancedChoice } from "../utils/enhancedPrompts.js";
+import { 
+  createProcessingPlan, 
+  getPerformanceRecommendations,
+  DEFAULT_PERFORMANCE_CONFIG
+} from "../utils/performanceOptimizer.js";
+import { processBatches } from "../utils/batchProcessor.js";
 
 export const pruneLocalBranchesCommand: CommandModule = {
   handler: async (args: any) => {
@@ -112,9 +118,22 @@ class PruneLocalBranches {
       return;
     }
 
-    // Get merged PRs from GitHub
+    // Show performance recommendations for large datasets
+    const recommendations = getPerformanceRecommendations(localBranches.length);
+    if (recommendations.length > 0) {
+      console.log('\n' + recommendations.join('\n'));
+    }
+
+    // Create processing plan based on dataset size
+    const processingPlan = createProcessingPlan(localBranches.length, DEFAULT_PERFORMANCE_CONFIG);
+    
+    if (processingPlan.memoryOptimized) {
+      console.log(`\n🔧 Using memory-optimized processing (estimated duration: ${processingPlan.estimatedDuration})`);
+    }
+
+    // Get merged PRs from GitHub with optimizations
     console.log("Fetching merged pull requests from GitHub...");
-    const mergedPRs = await this.getMergedPRsMap();
+    const mergedPRs = await this.getMergedPRsMapOptimized(processingPlan);
     console.log(`Found ${mergedPRs.size} merged pull requests`);
 
     // Filter branches for safety
@@ -126,11 +145,18 @@ class PruneLocalBranches {
     console.log(`  Safe to delete: ${safeBranches.length}`);
     console.log(`  Unsafe to delete: ${unsafeBranches.length}`);
 
-    // Show unsafe branches and reasons
+    // Show unsafe branches and reasons (limit output for large datasets)
     if (unsafeBranches.length > 0) {
       console.log(`\nSkipping unsafe branches:`);
-      for (const { branch, safetyCheck } of unsafeBranches) {
+      const maxUnsafeToShow = unsafeBranches.length > 20 ? 10 : unsafeBranches.length;
+      
+      for (let i = 0; i < maxUnsafeToShow; i++) {
+        const { branch, safetyCheck } = unsafeBranches[i];
         console.log(`  - ${branch.name} (${safetyCheck.reason})`);
+      }
+      
+      if (unsafeBranches.length > maxUnsafeToShow) {
+        console.log(`  ... and ${unsafeBranches.length - maxUnsafeToShow} more`);
       }
     }
 
@@ -143,26 +169,28 @@ class PruneLocalBranches {
     let branchesToDelete = safeBranches;
     
     if (!this.force && !this.dryRun) {
-      // Interactive mode
-      const choices = safeBranches.map(({ branch, matchingPR }) => {
+      // Enhanced interactive mode for large datasets
+      const choices: EnhancedChoice[] = safeBranches.map(({ branch, matchingPR }) => {
         const prInfo = matchingPR ? `PR #${matchingPR.number}` : 'no PR';
         const lastCommit = branch.lastCommitDate ? new Date(branch.lastCommitDate).toLocaleDateString() : 'unknown';
         return {
           name: `${branch.name} (${prInfo}, last commit: ${lastCommit})`,
           value: branch.name,
-          checked: true
+          checked: true,
+          metadata: {
+            prNumber: matchingPR?.number,
+            lastCommit,
+          }
         };
       });
 
-      const { selectedBranches } = await inquirer.prompt([
-        {
-          type: 'checkbox',
-          name: 'selectedBranches',
-          message: 'Select branches to delete:',
-          choices,
-          pageSize: 20
-        }
-      ]);
+      const selectedBranches = await createPaginatedCheckboxPrompt({
+        message: 'Select branches to delete:',
+        choices,
+        pageSize: 15,
+        searchEnabled: true,
+        bulkActionsEnabled: true
+      });
 
       if (selectedBranches.length === 0) {
         console.log("\nNo branches selected for deletion.");
@@ -177,6 +205,19 @@ class PruneLocalBranches {
     // Show what will be deleted
     console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${branchesToDelete.length} branch${branchesToDelete.length === 1 ? '' : 'es'}:`);
     
+    // Use batch processing for large datasets
+    if (branchesToDelete.length > processingPlan.batchSize) {
+      await this.processBranchesInBatches(branchesToDelete, processingPlan, unsafeBranches.length);
+    } else {
+      await this.processBranchesSequentially(branchesToDelete, unsafeBranches.length);
+    }
+
+  }
+
+  private async processBranchesSequentially(
+    branchesToDelete: Array<{ branch: any; matchingPR?: PullRequest }>,
+    unsafeCount: number
+  ): Promise<{ deletedCount: number; errorCount: number }> {
     // Use progress bar only if we have a TTY, otherwise use simple logging
     const isTTY = process.stderr.isTTY;
     let bar: ProgressBar | null = null;
@@ -233,7 +274,64 @@ class PruneLocalBranches {
       bar.terminate();
     }
 
-    // Summary
+    this.printSummary(deletedCount, errorCount, unsafeCount);
+    return { deletedCount, errorCount };
+  }
+
+  private async processBranchesInBatches(
+    branchesToDelete: Array<{ branch: any; matchingPR?: PullRequest }>,
+    processingPlan: any,
+    unsafeCount: number
+  ): Promise<{ deletedCount: number; errorCount: number }> {
+    console.log(`🔧 Processing ${branchesToDelete.length} branches in batches of ${processingPlan.batchSize}`);
+    
+    let totalDeleted = 0;
+    let totalErrors = 0;
+    
+    const processor = async (batch: Array<{ branch: any; matchingPR?: PullRequest }>) => {
+      const results = [];
+      
+      for (const { branch, matchingPR } of batch) {
+        const prInfo = matchingPR ? `#${matchingPR.number}` : 'no PR';
+        
+        try {
+          if (this.dryRun) {
+            console.log(`[DRY RUN] Would delete: ${branch.name} (${prInfo})`);
+          } else {
+            deleteLocalBranch(branch.name);
+            console.log(`Deleted: ${branch.name} (${prInfo})`);
+          }
+          results.push({ success: true, branch: branch.name });
+        } catch (error) {
+          console.log(`Error deleting ${branch.name}: ${error instanceof Error ? error.message : String(error)}`);
+          results.push({ success: false, branch: branch.name, error });
+        }
+      }
+      
+      return results;
+    };
+
+    const batchResults = await processBatches(branchesToDelete, processor, {
+      batchSize: processingPlan.batchSize,
+      showProgress: true
+    });
+
+    // Count results
+    batchResults.processed.forEach(result => {
+      if (result.success) {
+        totalDeleted++;
+      } else {
+        totalErrors++;
+      }
+    });
+
+    totalErrors += batchResults.errors.length;
+
+    this.printSummary(totalDeleted, totalErrors, unsafeCount);
+    return { deletedCount: totalDeleted, errorCount: totalErrors };
+  }
+
+  private printSummary(deletedCount: number, errorCount: number, unsafeCount: number): void {
     console.log(`\nSummary:`);
     if (this.dryRun) {
       console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
@@ -245,11 +343,16 @@ class PruneLocalBranches {
       console.log(`  Errors: ${errorCount}`);
     }
     
-    console.log(`  Skipped (unsafe): ${unsafeBranches.length}`);
+    if (unsafeCount > 0) {
+      console.log(`  Skipped (unsafe): ${unsafeCount}`);
+    }
   }
 
-  private async getMergedPRsMap(): Promise<Map<string, PullRequest>> {
+
+  private async getMergedPRsMapOptimized(processingPlan: any): Promise<Map<string, PullRequest>> {
     const mergedPRs = new Map<string, PullRequest>();
+    let prCount = 0;
+    const maxPRs = processingPlan.prFetchLimit || 1000;
 
     const pullRequests = this.octokitPlus.getPullRequests({
       repo: this.repo,
@@ -260,11 +363,41 @@ class PruneLocalBranches {
       direction: "desc"
     });
 
+    // Show progress for large PR fetching operations
+    let progressBar: ProgressBar | null = null;
+    if (processingPlan.limitPRFetch && process.stderr.isTTY) {
+      progressBar = new ProgressBar('Fetching PRs [:bar] :current/:total (:percent)', {
+        total: Math.min(maxPRs, 1000),
+        width: 30,
+        stream: process.stderr
+      });
+    }
+
     for await (const pr of pullRequests) {
+      // Limit PR fetching for performance
+      if (processingPlan.limitPRFetch && prCount >= maxPRs) {
+        if (progressBar) {
+          progressBar.update(maxPRs);
+          progressBar.terminate();
+        }
+        console.log(`\n⚡ Limited to ${maxPRs} most recent PRs for performance`);
+        break;
+      }
+
+      prCount++;
+      if (progressBar && prCount % 10 === 0) {
+        progressBar.update(Math.min(prCount, maxPRs));
+      }
+
       // Only include merged PRs
       if (pr.merge_commit_sha) {
         mergedPRs.set(pr.head.ref, pr);
       }
+    }
+
+    if (progressBar) {
+      progressBar.update(Math.min(prCount, maxPRs));
+      progressBar.terminate();
     }
 
     return mergedPRs;
