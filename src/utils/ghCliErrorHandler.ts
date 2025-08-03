@@ -1,4 +1,5 @@
 import { ExecaSyncError } from "execa";
+import { platform } from "os";
 
 export interface GhCliError {
   type: "not-installed" | "not-authenticated" | "unknown";
@@ -80,27 +81,62 @@ export function isGhNotAuthenticatedError(error: ExecaSyncError): boolean {
 }
 
 export function getGhInstallationInstructions(): string {
+  const currentPlatform = platform();
+  let platformInstructions = "";
+
+  switch (currentPlatform) {
+    case "win32":
+      platformInstructions = `To install GitHub CLI on Windows:
+
+  Option 1: Using winget (recommended)
+    winget install --id GitHub.cli
+
+  Option 2: Using Chocolatey
+    choco install gh
+
+  Option 3: Download installer
+    Visit https://cli.github.com/ and download the MSI installer`;
+      break;
+
+    case "darwin":
+      platformInstructions = `To install GitHub CLI on macOS:
+
+  Option 1: Using Homebrew (recommended)
+    brew install gh
+
+  Option 2: Using MacPorts
+    sudo port install gh
+
+  Option 3: Download installer
+    Visit https://cli.github.com/ and download the pkg installer`;
+      break;
+
+    case "linux":
+      // For Linux, we could try to detect the distribution, but for now we'll show the most common
+      platformInstructions = `To install GitHub CLI on Linux:
+
+  For Ubuntu/Debian:
+    sudo apt install gh
+
+  For Fedora/CentOS/RHEL:
+    sudo dnf install gh
+
+  For Arch Linux:
+    sudo pacman -S github-cli
+
+  For other distributions, see the README`;
+      break;
+
+    default:
+      platformInstructions = `To install GitHub CLI on your platform, visit: https://cli.github.com/`;
+  }
+
   return `Error: GitHub CLI (gh) is not installed.
 
-To install GitHub CLI:
+${platformInstructions}
 
-On Windows:
-  - Download from https://cli.github.com/
-  - Or use winget: winget install --id GitHub.cli
-  - Or use Chocolatey: choco install gh
-
-On macOS:
-  - Use Homebrew: brew install gh
-  - Or use MacPorts: sudo port install gh
-
-On Linux:
-  - Ubuntu/Debian: 
-    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-    sudo apt update
-    sudo apt install gh
-  - Fedora/CentOS/RHEL: sudo dnf install gh
-  - Arch Linux: sudo pacman -S github-cli
+For installation instructions for other platforms, see:
+https://github.com/ericanderson/ghouls#installing-github-cli
 
 For more information, visit: https://cli.github.com/`;
 }

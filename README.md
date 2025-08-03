@@ -25,14 +25,73 @@ The ghouls can help you.
 Ghouls uses GitHub CLI authentication. Make sure you have the GitHub CLI (`gh`) installed and authenticated:
 
 ```bash
-# Install GitHub CLI if you haven't already
-# See: https://cli.github.com/
-
 # Authenticate with GitHub CLI
 gh auth login
 ```
 
 That's it! Ghouls will automatically use your existing GitHub CLI authentication.
+
+## Installing GitHub CLI
+
+If you don't have GitHub CLI installed, here are the installation instructions for all platforms:
+
+### Windows
+
+```bash
+# Using winget (recommended)
+winget install --id GitHub.cli
+
+# Using Chocolatey
+choco install gh
+
+# Using Scoop
+scoop install gh
+```
+
+### macOS
+
+```bash
+# Using Homebrew (recommended)
+brew install gh
+
+# Using MacPorts
+sudo port install gh
+
+# Using Conda
+conda install gh --channel conda-forge
+```
+
+### Linux
+
+#### Ubuntu/Debian
+
+```bash
+# Add GitHub CLI repository
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update
+sudo apt install gh
+```
+
+#### Fedora/CentOS/RHEL
+
+```bash
+sudo dnf install gh
+```
+
+#### Arch Linux
+
+```bash
+sudo pacman -S github-cli
+```
+
+#### openSUSE/SUSE
+
+```bash
+sudo zypper install gh
+```
+
+For other platforms and more installation options, visit: https://cli.github.com/
 
 # Commands
 

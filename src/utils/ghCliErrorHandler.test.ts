@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ExecaSyncError } from 'execa';
 import {
   detectGhCliError,
@@ -9,7 +9,23 @@ import {
   formatGhCliError
 } from './ghCliErrorHandler.js';
 
+// Mock the os module
+vi.mock('os', () => ({
+  platform: vi.fn()
+}));
+
+import { platform } from 'os';
+const mockedPlatform = vi.mocked(platform);
+
 describe('ghCliErrorHandler', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('isGhNotInstalledError', () => {
     it('should detect exit code 127 as not installed', () => {
       const error = {
@@ -158,6 +174,9 @@ describe('ghCliErrorHandler', () => {
 
   describe('detectGhCliError', () => {
     it('should detect not installed error', () => {
+      // Mock the platform to ensure consistent test results
+      mockedPlatform.mockReturnValue('linux');
+      
       const error = {
         exitCode: 127,
         stderr: 'gh: command not found',
@@ -168,7 +187,7 @@ describe('ghCliErrorHandler', () => {
       expect(result).not.toBeNull();
       expect(result?.type).toBe('not-installed');
       expect(result?.message).toBe('GitHub CLI (gh) is not installed.');
-      expect(result?.instructions).toContain('To install GitHub CLI:');
+      expect(result?.instructions).toContain('To install GitHub CLI on Linux:');
     });
 
     it('should detect not authenticated error', () => {
@@ -205,30 +224,53 @@ describe('ghCliErrorHandler', () => {
   });
 
   describe('getGhInstallationInstructions', () => {
-    it('should include Windows installation instructions', () => {
+    it('should show Windows-specific instructions on Windows', () => {
+      mockedPlatform.mockReturnValue('win32');
       const instructions = getGhInstallationInstructions();
-      expect(instructions).toContain('On Windows:');
+      expect(instructions).toContain('To install GitHub CLI on Windows:');
       expect(instructions).toContain('winget install --id GitHub.cli');
       expect(instructions).toContain('choco install gh');
+      expect(instructions).not.toContain('brew install');
+      expect(instructions).not.toContain('apt install');
     });
 
-    it('should include macOS installation instructions', () => {
+    it('should show macOS-specific instructions on macOS', () => {
+      mockedPlatform.mockReturnValue('darwin');
       const instructions = getGhInstallationInstructions();
-      expect(instructions).toContain('On macOS:');
+      expect(instructions).toContain('To install GitHub CLI on macOS:');
       expect(instructions).toContain('brew install gh');
       expect(instructions).toContain('sudo port install gh');
+      expect(instructions).not.toContain('winget install');
+      expect(instructions).not.toContain('apt install');
     });
 
-    it('should include Linux installation instructions', () => {
+    it('should show Linux instructions on Linux', () => {
+      mockedPlatform.mockReturnValue('linux');
       const instructions = getGhInstallationInstructions();
-      expect(instructions).toContain('On Linux:');
-      expect(instructions).toContain('Ubuntu/Debian:');
-      expect(instructions).toContain('Fedora/CentOS/RHEL:');
-      expect(instructions).toContain('Arch Linux:');
+      expect(instructions).toContain('To install GitHub CLI on Linux:');
+      expect(instructions).toContain('sudo apt install gh');
+      expect(instructions).toContain('sudo dnf install gh');
+      expect(instructions).toContain('sudo pacman -S github-cli');
+      expect(instructions).not.toContain('winget install');
+      expect(instructions).not.toContain('brew install');
+    });
+
+    it('should include link to README for other platforms', () => {
+      mockedPlatform.mockReturnValue('linux');
+      const instructions = getGhInstallationInstructions();
+      expect(instructions).toContain('https://github.com/ericanderson/ghouls#installing-github-cli');
     });
 
     it('should include GitHub CLI website link', () => {
+      mockedPlatform.mockReturnValue('darwin');
       const instructions = getGhInstallationInstructions();
+      expect(instructions).toContain('https://cli.github.com/');
+    });
+
+    it('should handle unknown platforms', () => {
+      mockedPlatform.mockReturnValue('freebsd' as any);
+      const instructions = getGhInstallationInstructions();
+      expect(instructions).toContain('To install GitHub CLI on your platform');
       expect(instructions).toContain('https://cli.github.com/');
     });
   });
