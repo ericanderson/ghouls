@@ -175,6 +175,59 @@ Summary:
   Skipped (unsafe): 12
 ```
 
+## Delete both remote and local branches
+
+The `all` command combines both remote and local branch cleanup in a single operation, running them in sequence for maximum efficiency.
+
+Run from within a git repository (auto-detects repo):
+```bash
+ghouls all --dry-run
+```
+
+Or specify a repository explicitly:
+```bash
+ghouls all --dry-run myorg/myrepo
+```
+
+### Execution Order
+
+The command executes in two phases:
+1. **Remote cleanup**: Deletes merged remote branches first
+2. **Local cleanup**: Then deletes corresponding local branches
+
+Even if one phase encounters errors, the command will continue with the next phase to ensure maximum cleanup.
+
+### Example Output
+
+```
+$ ghouls all
+
+🚀 Starting combined branch cleanup...
+
+=== Phase 1: Remote Branch Cleanup ===
+Scanning for remote branches that can be safely deleted...
+Found 5 branches that can be deleted.
+Deleted: heads/feature/old-feature (PR #101)
+Deleted: heads/fix/bug-123 (PR #102)
+...
+
+=== Phase 2: Local Branch Cleanup ===
+Scanning for local branches that can be safely deleted...
+Found 8 local branches
+Branch Analysis:
+  Safe to delete: 3
+  Unsafe to delete: 5
+Deleted: feature/old-feature (#101)
+Deleted: fix/bug-123 (#102)
+...
+
+=== Combined Cleanup Summary ===
+Remote cleanup: ✅ Success
+Local cleanup: ✅ Success
+
+✅ All cleanup operations completed successfully!
+```
+
 # Development
 
 ## Testing
