@@ -99,7 +99,7 @@ class PrunePullRequest {
     const branchesToDelete = await this.collectDeletableBranches();
     
     if (branchesToDelete.length === 0) {
-      console.log("\nNo branches found that can be safely deleted.");
+      console.log("\n👻 No branches found that can be safely deleted.");
       return;
     }
 
@@ -123,14 +123,14 @@ class PrunePullRequest {
         {
           type: 'checkbox',
           name: 'selected',
-          message: 'Select remote branches to delete:',
+          message: '👻 Select remote branches to delete:',
           choices,
           pageSize: 20
         }
       ]);
 
       if (selected.length === 0) {
-        console.log("\nNo branches selected for deletion.");
+        console.log("\n👻 No branches selected for deletion.");
         return;
       }
 
@@ -140,7 +140,7 @@ class PrunePullRequest {
     }
 
     // Delete selected branches
-    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${selectedBranches.length} branch${selectedBranches.length === 1 ? '' : 'es'}:`);
+    console.log(`\n💀 ${this.dryRun ? 'Would delete' : 'Deleting'} ${selectedBranches.length} branch${selectedBranches.length === 1 ? '' : 'es'}:`);
     
     const bar = new ProgressBar(":bar :branch (:current/:total)", {
       total: selectedBranches.length,
@@ -158,7 +158,7 @@ class PrunePullRequest {
           bar.interrupt(`[DRY RUN] Would delete: ${ref} (PR #${pr.number})`);
         } else {
           await this.octokitPlus.deleteReference(pr.head);
-          bar.interrupt(`Deleted: ${ref} (PR #${pr.number})`);
+          bar.interrupt(`💀 Deleted: ${ref} (PR #${pr.number})`);
         }
         deletedCount++;
       } catch (error) {
@@ -175,7 +175,7 @@ class PrunePullRequest {
     if (this.dryRun) {
       console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
     } else {
-      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      console.log(`  👻 Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
     }
     
     if (errorCount > 0) {

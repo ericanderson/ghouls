@@ -9,7 +9,7 @@ sourceMapSupport.install();
 export default function cli() {
   process.on("unhandledRejection", console.log);
   yargs(hideBin(process.argv))
-    .usage("$0 <cmd> [args]")
+    .usage("👻 $0 <cmd> [args]\n\nGhouls - Remove those pesky dead branches")
     .demandCommand()
     .command(prunePullRequestsCommand)
     .command(pruneLocalBranchesCommand)

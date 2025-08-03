@@ -316,7 +316,7 @@ describe('PruneLocalBranches', () => {
 
       await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('No local branches found.');
+      expect(consoleLogSpy).toHaveBeenCalledWith('👻 No local branches found.');
     });
 
     it('should handle no safe branches to delete', async () => {
@@ -340,7 +340,7 @@ describe('PruneLocalBranches', () => {
 
       await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('\nNo branches are safe to delete.');
+      expect(consoleLogSpy).toHaveBeenCalledWith('\n👻 No branches are safe to delete.');
       expect(consoleLogSpy).toHaveBeenCalledWith('\nSkipping unsafe branches:');
       expect(consoleLogSpy).toHaveBeenCalledWith('  - main (current branch)');
       expect(consoleLogSpy).toHaveBeenCalledWith('  - develop (protected branch)');
@@ -373,8 +373,8 @@ describe('PruneLocalBranches', () => {
 
       expect(mockedDeleteLocalBranch).toHaveBeenCalledWith('feature-1');
       expect(mockedDeleteLocalBranch).toHaveBeenCalledWith('feature-2');
-      expect(consoleLogSpy).toHaveBeenCalledWith('Deleted: feature-1 (#1)');
-      expect(consoleLogSpy).toHaveBeenCalledWith('Deleted: feature-2 (#2)');
+      expect(consoleLogSpy).toHaveBeenCalledWith('💀 Deleted: feature-1 (#1)');
+      expect(consoleLogSpy).toHaveBeenCalledWith('💀 Deleted: feature-2 (#2)');
     });
 
     it('should simulate deletion in dry-run mode', async () => {
@@ -447,7 +447,7 @@ describe('PruneLocalBranches', () => {
       await pruneLocalBranchesCommand.handler!({ dryRun: false, _: [], $0: 'ghouls' });
 
       expect(consoleLogSpy).toHaveBeenCalledWith('Error deleting feature-1: Git deletion failed');
-      expect(consoleLogSpy).toHaveBeenCalledWith('  Successfully deleted: 0 branches');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  👻 Successfully deleted: 0 branches');
       expect(consoleLogSpy).toHaveBeenCalledWith('  Errors: 1');
     });
 
@@ -540,8 +540,8 @@ describe('PruneLocalBranches', () => {
       // Verify the regular console.log calls still happen (for non-progress messages)
       expect(consoleLogSpy).toHaveBeenCalledWith('\nScanning for local branches that can be safely deleted...');
       expect(consoleLogSpy).toHaveBeenCalledWith('Found 1 local branches');
-      expect(consoleLogSpy).toHaveBeenCalledWith('\nDeleting 1 branch:');
-      expect(consoleLogSpy).toHaveBeenCalledWith('  Successfully deleted: 1 branch');
+      expect(consoleLogSpy).toHaveBeenCalledWith('\n💀 Deleting 1 branch:');
+      expect(consoleLogSpy).toHaveBeenCalledWith('  👻 Successfully deleted: 1 branch');
     });
   });
 });
