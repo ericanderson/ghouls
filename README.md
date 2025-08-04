@@ -111,6 +111,10 @@ Or specify a repository explicitly:
 ghouls remote --dry-run myorg/myrepo
 ```
 
+### Interactive Mode
+
+When running without `--dry-run` or `--force` flags, the remote command runs in interactive mode, allowing you to review and confirm each branch deletion. Press **Escape** at any time during the interactive selection to cancel the operation and return to the command prompt without making any changes.
+
 ```
 $ ghouls remote myorg/myrepo
 #1871 - Deleting remote: heads/fix/fe-nits
@@ -133,6 +137,10 @@ Or specify a repository explicitly:
 ```bash
 ghouls local --dry-run myorg/myrepo
 ```
+
+### Interactive Mode
+
+When running without `--dry-run` or `--force` flags, the local command runs in interactive mode, allowing you to review and confirm each branch deletion. Press **Escape** at any time during the interactive selection to cancel the operation and return to the command prompt without making any changes.
 
 ### Safety Features
 
@@ -189,6 +197,10 @@ Or specify a repository explicitly:
 ```bash
 ghouls all --dry-run myorg/myrepo
 ```
+
+### Interactive Mode
+
+When running without `--dry-run` or `--force` flags, the all command runs in interactive mode for both remote and local cleanup phases. Press **Escape** at any time during either interactive selection to cancel the current operation and return to the command prompt without making any changes.
 
 ### Execution Order
 
