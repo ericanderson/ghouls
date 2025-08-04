@@ -31,7 +31,7 @@ export const pruneAllCommand: CommandModule = {
     // but the actual API calls are made within the individual command handlers
     createOctokitPlus();
 
-    console.log("🚀 Starting combined branch cleanup...\n");
+    console.log("👻 Starting combined branch cleanup...\n");
 
     let remoteSuccess = false;
     let localSuccess = false;
@@ -82,7 +82,7 @@ export const pruneAllCommand: CommandModule = {
       console.log("\n⚠️  Cleanup completed with some errors.");
       process.exit(0);
     } else {
-      console.log("\n✅ All cleanup operations completed successfully!");
+      console.log("\n👻 All cleanup operations completed successfully! 🎃");
     }
   },
   command: "all [--dry-run] [--force] [repo]",

@@ -108,7 +108,7 @@ class PruneLocalBranches {
     console.log(`Found ${localBranches.length} local branches`);
     
     if (localBranches.length === 0) {
-      console.log("No local branches found.");
+      console.log("👻 No local branches found.");
       return;
     }
 
@@ -135,7 +135,7 @@ class PruneLocalBranches {
     }
 
     if (safeBranches.length === 0) {
-      console.log("\nNo branches are safe to delete.");
+      console.log("\n👻 No branches are safe to delete.");
       return;
     }
 
@@ -158,14 +158,14 @@ class PruneLocalBranches {
         {
           type: 'checkbox',
           name: 'selectedBranches',
-          message: 'Select branches to delete:',
+          message: '👻 Select branches to delete:',
           choices,
           pageSize: 20
         }
       ]);
 
       if (selectedBranches.length === 0) {
-        console.log("\nNo branches selected for deletion.");
+        console.log("\n👻 No branches selected for deletion.");
         return;
       }
 
@@ -175,7 +175,7 @@ class PruneLocalBranches {
     }
 
     // Show what will be deleted
-    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${branchesToDelete.length} branch${branchesToDelete.length === 1 ? '' : 'es'}:`);
+    console.log(`\n💀 ${this.dryRun ? 'Would delete' : 'Deleting'} ${branchesToDelete.length} branch${branchesToDelete.length === 1 ? '' : 'es'}:`);
     
     // Use progress bar only if we have a TTY, otherwise use simple logging
     const isTTY = process.stderr.isTTY;
@@ -209,7 +209,7 @@ class PruneLocalBranches {
           }
         } else {
           deleteLocalBranch(branch.name);
-          const message = `Deleted: ${branch.name} (${prInfo})`;
+          const message = `💀 Deleted: ${branch.name} (${prInfo})`;
           if (bar) {
             bar.interrupt(message);
           } else {
@@ -238,7 +238,7 @@ class PruneLocalBranches {
     if (this.dryRun) {
       console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
     } else {
-      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      console.log(`  👻 Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
     }
     
     if (errorCount > 0) {
