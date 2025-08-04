@@ -2,9 +2,22 @@ import type { CommandModule } from "yargs";
 import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import { getGitRemote } from "../utils/getGitRemote.js";
 import { isGitRepository } from "../utils/localGitOperations.js";
+import { 
+  output, 
+  outputSection, 
+  outputSuccess, 
+  outputError, 
+  outputWarning 
+} from "../utils/outputFormatter.js";
 
 export const pruneAllCommand: CommandModule = {
   handler: async (args: any) => {
+    // Set output options based on CLI flags
+    const { setOutputOptions } = await import("../utils/outputFormatter.js");
+    setOutputOptions({
+      verbose: Boolean(args.verbose)
+    });
+
     let owner: string;
     let repo: string;
 
@@ -31,7 +44,7 @@ export const pruneAllCommand: CommandModule = {
     // but the actual API calls are made within the individual command handlers
     createOctokitPlus();
 
-    console.log("🚀 Starting combined branch cleanup...\n");
+    output("🚀 Starting combined branch cleanup...");
 
     let remoteSuccess = false;
     let localSuccess = false;
@@ -39,7 +52,7 @@ export const pruneAllCommand: CommandModule = {
     let localError: Error | undefined;
 
     // Phase 1: Remote branch pruning
-    console.log("=== Phase 1: Remote Branch Cleanup ===");
+    outputSection("Phase 1: Remote Branch Cleanup");
     try {
       // Import dynamically to avoid circular dependencies
       const { prunePullRequestsCommand } = await import("./PrunePullRequests.js");
@@ -50,11 +63,11 @@ export const pruneAllCommand: CommandModule = {
       remoteSuccess = true;
     } catch (error) {
       remoteError = error instanceof Error ? error : new Error(String(error));
-      console.error(`\n❌ Remote cleanup failed: ${remoteError.message}`);
+      outputError(`❌ Remote cleanup failed: ${remoteError.message}`);
     }
 
     // Phase 2: Local branch pruning (continue even if remote failed)
-    console.log("\n=== Phase 2: Local Branch Cleanup ===");
+    outputSection("Phase 2: Local Branch Cleanup");
     try {
       // Import dynamically to avoid circular dependencies
       const { pruneLocalBranchesCommand } = await import("./PruneLocalBranches.js");
@@ -65,24 +78,24 @@ export const pruneAllCommand: CommandModule = {
       localSuccess = true;
     } catch (error) {
       localError = error instanceof Error ? error : new Error(String(error));
-      console.error(`\n❌ Local cleanup failed: ${localError.message}`);
+      outputError(`❌ Local cleanup failed: ${localError.message}`);
     }
 
     // Final summary
-    console.log("\n=== Combined Cleanup Summary ===");
-    console.log(`Remote cleanup: ${remoteSuccess ? "✅ Success" : "❌ Failed"}`);
-    console.log(`Local cleanup: ${localSuccess ? "✅ Success" : "❌ Failed"}`);
+    outputSection("Combined Cleanup Summary");
+    output(`Remote cleanup: ${remoteSuccess ? "✅ Success" : "❌ Failed"}`);
+    output(`Local cleanup: ${localSuccess ? "✅ Success" : "❌ Failed"}`);
 
     // Exit with error code if both operations failed
     if (!remoteSuccess && !localSuccess) {
-      console.error("\n❌ Both cleanup operations failed!");
+      outputError("❌ Both cleanup operations failed!");
       process.exit(1);
     } else if (!remoteSuccess || !localSuccess) {
       // Partial success
-      console.log("\n⚠️  Cleanup completed with some errors.");
+      outputWarning("Cleanup completed with some errors.");
       process.exit(0);
     } else {
-      console.log("\n✅ All cleanup operations completed successfully!");
+      outputSuccess("All cleanup operations completed successfully!");
     }
   },
   command: "all [--dry-run] [--force] [repo]",
@@ -97,6 +110,12 @@ export const pruneAllCommand: CommandModule = {
       .option("force", {
         type: "boolean",
         description: "Skip interactive mode and delete all safe branches automatically"
+      })
+      .option("verbose", {
+        alias: "v",
+        type: "boolean",
+        description: "Show detailed output including progress information",
+        default: false
       })
       .positional("repo", {
         type: "string",

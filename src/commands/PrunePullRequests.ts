@@ -4,10 +4,23 @@ import ProgressBar from "progress";
 import { PullRequest, OctokitPlus } from "../OctokitPlus.js";
 import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch.js";
 import { getGitRemote } from "../utils/getGitRemote.js";
-import inquirer from "inquirer";
+import { promptWithCancel } from "../utils/promptWithCancel.js";
+import { 
+  output, 
+  verboseOutput, 
+  outputSummary, 
+  outputError, 
+  isVerbose 
+} from "../utils/outputFormatter.js";
 
 export const prunePullRequestsCommand: CommandModule = {
   handler: async (args: any) => {
+    // Set output options based on CLI flags
+    const { setOutputOptions } = await import("../utils/outputFormatter.js");
+    setOutputOptions({
+      verbose: Boolean(args.verbose)
+    });
+
     let owner: string;
     let repo: string;
 
@@ -47,6 +60,12 @@ export const prunePullRequestsCommand: CommandModule = {
       .option("force", {
         type: "boolean",
         description: "Skip interactive mode and delete all merged branches automatically"
+      })
+      .option("verbose", {
+        alias: "v",
+        type: "boolean",
+        description: "Show detailed output including progress information",
+        default: false
       })
       .positional("repo", {
         type: "string",
@@ -93,17 +112,17 @@ class PrunePullRequest {
   ) {}
 
   public async perform() {
-    console.log("\nScanning for remote branches that can be safely deleted...");
+    verboseOutput("Scanning for remote branches that can be safely deleted...");
     
     // First collect all branches that can be deleted
     const branchesToDelete = await this.collectDeletableBranches();
     
     if (branchesToDelete.length === 0) {
-      console.log("\nNo branches found that can be safely deleted.");
+      output("No remote branches found that can be safely deleted.");
       return;
     }
 
-    console.log(`Found ${branchesToDelete.length} branches that can be deleted.`);
+    output(`Found ${branchesToDelete.length} remote branch${branchesToDelete.length === 1 ? '' : 'es'} that can be deleted.`);
 
     // Get branches to delete based on mode
     let selectedBranches = branchesToDelete;
@@ -119,7 +138,7 @@ class PrunePullRequest {
         };
       });
 
-      const { selected } = await inquirer.prompt([
+      const result = await promptWithCancel<{ selected: string[] }>([
         {
           type: 'checkbox',
           name: 'selected',
@@ -129,58 +148,88 @@ class PrunePullRequest {
         }
       ]);
 
-      if (selected.length === 0) {
-        console.log("\nNo branches selected for deletion.");
+      if (result === null) {
+        output("Operation cancelled by user");
+        return;
+      }
+
+      if (result.selected.length === 0) {
+        output("No branches selected for deletion.");
         return;
       }
 
       selectedBranches = branchesToDelete.filter(({ ref }) => 
-        selected.includes(ref)
+        result.selected.includes(ref)
       );
     }
 
     // Delete selected branches
-    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${selectedBranches.length} branch${selectedBranches.length === 1 ? '' : 'es'}:`);
+    output(`${this.dryRun ? 'Would delete' : 'Deleting'} ${selectedBranches.length} remote branch${selectedBranches.length === 1 ? '' : 'es'}:`);
     
-    const bar = new ProgressBar(":bar :branch (:current/:total)", {
-      total: selectedBranches.length,
-      width: 30
-    });
+    // Only show progress bar in verbose mode
+    let bar: ProgressBar | null = null;
+    if (isVerbose()) {
+      bar = new ProgressBar(":bar :branch (:current/:total)", {
+        total: selectedBranches.length,
+        width: 30
+      });
+    }
 
     let deletedCount = 0;
     let errorCount = 0;
 
     for (const { ref, pr } of selectedBranches) {
-      bar.update(deletedCount + errorCount, { branch: `${ref} (#${pr.number})` });
+      if (bar) {
+        bar.update(deletedCount + errorCount, { branch: `${ref} (#${pr.number})` });
+      }
 
       try {
         if (this.dryRun) {
-          bar.interrupt(`[DRY RUN] Would delete: ${ref} (PR #${pr.number})`);
+          const message = `[DRY RUN] Would delete: ${ref} (PR #${pr.number})`;
+          if (bar) {
+            bar.interrupt(message);
+          } else {
+            output(`  ${message}`);
+          }
         } else {
           await this.octokitPlus.deleteReference(pr.head);
-          bar.interrupt(`Deleted: ${ref} (PR #${pr.number})`);
+          const message = `Deleted: ${ref} (PR #${pr.number})`;
+          if (bar) {
+            bar.interrupt(message);
+          } else {
+            output(`  ${message}`);
+          }
         }
         deletedCount++;
       } catch (error) {
-        bar.interrupt(`Error deleting ${ref}: ${error instanceof Error ? error.message : String(error)}`);
+        const message = `Error deleting ${ref}: ${error instanceof Error ? error.message : String(error)}`;
+        if (bar) {
+          bar.interrupt(message);
+        } else {
+          outputError(`  ${message}`);
+        }
         errorCount++;
       }
     }
 
-    bar.update(selectedBranches.length, { branch: "" });
-    bar.terminate();
+    if (bar) {
+      bar.update(selectedBranches.length, { branch: "" });
+      bar.terminate();
+    }
 
     // Summary
-    console.log(`\nSummary:`);
+    const summaryItems: string[] = [];
     if (this.dryRun) {
-      console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      summaryItems.push(`Would delete: ${deletedCount} remote branch${deletedCount === 1 ? '' : 'es'}`);
     } else {
-      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      summaryItems.push(`Successfully deleted: ${deletedCount} remote branch${deletedCount === 1 ? '' : 'es'}`);
     }
     
     if (errorCount > 0) {
-      console.log(`  Errors: ${errorCount}`);
+      summaryItems.push(`Errors: ${errorCount}`);
     }
+    
+    outputSummary(summaryItems);
   }
 
   private async collectDeletableBranches(): Promise<BranchToDelete[]> {

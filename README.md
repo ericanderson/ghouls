@@ -95,6 +95,15 @@ For other platforms and more installation options, visit: https://cli.github.com
 
 # Commands
 
+## Output Modes
+
+Ghouls supports two output modes to suit different use cases:
+
+- **Default mode**: Shows essential information only - final results, summaries, and errors. Ideal for scripts and everyday use.
+- **Verbose mode** (`-v` or `--verbose`): Shows detailed progress information including scanning progress, branch analysis details, and progress bars. Useful for debugging or understanding what the tool is doing.
+
+All commands support both output modes. Use the verbose flag when you need more insight into the cleanup process.
+
 ## Delete remote branches
 
 Safely deletes remote branches that have been merged via pull requests.
@@ -104,12 +113,23 @@ Run from within a git repository (auto-detects repo):
 ghouls remote --dry-run
 ```
 
+For detailed output including progress information, use the verbose flag:
+```bash
+ghouls remote --dry-run --verbose
+# or
+ghouls remote --dry-run -v
+```
+
 The auto-detection feature works with both github.com and GitHub Enterprise repositories, automatically detecting the repository owner/name from the remote URL.
 
 Or specify a repository explicitly:
 ```bash
 ghouls remote --dry-run myorg/myrepo
 ```
+
+### Interactive Mode
+
+When running without `--dry-run` or `--force` flags, the remote command runs in interactive mode, allowing you to review and confirm each branch deletion. Press **Escape** at any time during the interactive selection to cancel the operation and return to the command prompt without making any changes.
 
 ```
 $ ghouls remote myorg/myrepo
@@ -129,10 +149,21 @@ Run from within a git repository (auto-detects repo):
 ghouls local --dry-run
 ```
 
+For detailed output including progress information, use the verbose flag:
+```bash
+ghouls local --dry-run --verbose
+# or
+ghouls local --dry-run -v
+```
+
 Or specify a repository explicitly:
 ```bash
 ghouls local --dry-run myorg/myrepo
 ```
+
+### Interactive Mode
+
+When running without `--dry-run` or `--force` flags, the local command runs in interactive mode, allowing you to review and confirm each branch deletion. Press **Escape** at any time during the interactive selection to cancel the operation and return to the command prompt without making any changes.
 
 ### Safety Features
 
@@ -185,10 +216,21 @@ Run from within a git repository (auto-detects repo):
 ghouls all --dry-run
 ```
 
+For detailed output including progress information, use the verbose flag:
+```bash
+ghouls all --dry-run --verbose
+# or
+ghouls all --dry-run -v
+```
+
 Or specify a repository explicitly:
 ```bash
 ghouls all --dry-run myorg/myrepo
 ```
+
+### Interactive Mode
+
+When running without `--dry-run` or `--force` flags, the all command runs in interactive mode for both remote and local cleanup phases. Press **Escape** at any time during either interactive selection to cancel the current operation and return to the command prompt without making any changes.
 
 ### Execution Order
 
