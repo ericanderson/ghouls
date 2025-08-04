@@ -120,6 +120,61 @@ describe('branchSafetyChecks', () => {
       });
     });
 
+    describe('release and hotfix branch checks', () => {
+      const releaseBranches = [
+        'release/v1.0.0',
+        'release/1.0',
+        'release/v2.1.3',
+        'release/2024.1',
+        'RELEASE/V1.0.0',  // Test case insensitive
+        'release-v1.0.0',
+        'release-1.0',
+        'release-v2.1.3',
+        'release-2024.1',
+        'RELEASE-V1.0.0',  // Test case insensitive
+        'hotfix/urgent-bug',
+        'hotfix/v1.0.1',
+        'hotfix/security-patch',
+        'HOTFIX/URGENT-BUG'  // Test case insensitive
+      ];
+
+      releaseBranches.forEach(branchName => {
+        it(`should not allow deleting release/hotfix branch: ${branchName}`, () => {
+          const branch = createLocalBranch(branchName, 'abc123');
+          mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+          const result = isBranchSafeToDelete(branch, 'main');
+
+          expect(result).toEqual({
+            safe: false,
+            reason: 'release/hotfix branch'
+          });
+        });
+      });
+
+      const nonReleaseBranches = [
+        'feature/release-notes',  // Contains "release" but not a release branch
+        'bugfix/hotfix-issue',    // Contains "hotfix" but not a hotfix branch
+        'release',                // Just "release" without separator
+        'hotfix',                 // Just "hotfix" without separator
+        'releases/v1.0.0',        // Plural "releases"
+        'hotfixes/v1.0.1',        // Plural "hotfixes"
+        'pre-release/v1.0.0',     // Has prefix before "release"
+        'my-hotfix/urgent'        // Has prefix before "hotfix"
+      ];
+
+      nonReleaseBranches.forEach(branchName => {
+        it(`should allow deleting non-release branch: ${branchName}`, () => {
+          const branch = createLocalBranch(branchName, 'abc123');
+          mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+          const result = isBranchSafeToDelete(branch, 'main');
+
+          expect(result).toEqual({ safe: true });
+        });
+      });
+    });
+
     describe('PR SHA matching checks', () => {
       it('should not allow deleting when PR head SHA does not match branch SHA', () => {
         const branch = createLocalBranch('feature-branch', 'abc123');
@@ -226,6 +281,19 @@ describe('branchSafetyChecks', () => {
         expect(result).toEqual({
           safe: false,
           reason: 'protected branch'
+        });
+      });
+
+      it('should prioritize release/hotfix branch check over PR checks', () => {
+        const branch = createLocalBranch('release/v1.0.0', 'abc123');
+        const pr = createPullRequest('abc123', 'merge-sha');
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = isBranchSafeToDelete(branch, 'main', pr);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: 'release/hotfix branch'
         });
       });
 
@@ -409,6 +477,7 @@ describe('branchSafetyChecks', () => {
       const branches = [
         createLocalBranch('main', 'abc123'),
         createLocalBranch('develop', 'def456'),
+        createLocalBranch('release/v1.0.0', 'mno345'),
         createLocalBranch('feature-safe', 'ghi789'),
         createLocalBranch('feature-unpushed', 'jkl012')
       ];
@@ -427,7 +496,7 @@ describe('branchSafetyChecks', () => {
 
       const result = filterSafeBranches(branches, 'other', mergedPRs);
 
-      expect(result).toHaveLength(4);
+      expect(result).toHaveLength(5);
       
       // main - protected
       expect(result[0].safetyCheck).toEqual({
@@ -441,11 +510,17 @@ describe('branchSafetyChecks', () => {
         reason: 'protected branch'
       });
 
+      // release/v1.0.0 - release branch
+      expect(result[2].safetyCheck).toEqual({
+        safe: false,
+        reason: 'release/hotfix branch'
+      });
+
       // feature-safe - safe
-      expect(result[2].safetyCheck).toEqual({ safe: true });
+      expect(result[3].safetyCheck).toEqual({ safe: true });
 
       // feature-unpushed - has unpushed commits
-      expect(result[3].safetyCheck).toEqual({
+      expect(result[4].safetyCheck).toEqual({
         safe: false,
         reason: '3 unpushed commits'
       });
