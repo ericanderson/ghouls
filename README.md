@@ -134,6 +134,89 @@ Or specify a repository explicitly:
 ghouls local --dry-run myorg/myrepo
 ```
 
+### Enhanced UI for Large Repositories
+
+The `local` command now includes enhanced UI capabilities that automatically optimize for repositories with many branches:
+
+#### Automatic Performance Optimization
+- **Large Dataset Detection**: Automatically detects when you have 100+ branches and enables optimized processing
+- **Memory Management**: Uses batch processing and memory optimization for repositories with 500+ branches
+- **Progress Reporting**: Shows detailed progress and estimated completion times for long-running operations
+- **Smart Recommendations**: Provides context-aware tips for better performance in large repositories
+
+#### Interactive Features for 100+ Branches
+When working with large numbers of branches, Ghouls provides enhanced interactive features:
+
+- **Search and Filtering**: Quickly find specific branches using search patterns
+- **Bulk Operations**: Select all, select none, or select branches matching regex patterns
+- **Paginated Selection**: Navigate through large lists without overwhelming your terminal
+- **Smart Defaults**: Pre-selects safe branches while showing detailed information
+
+### Example with Large Dataset
+
+```bash
+$ ghouls local --dry-run
+
+Scanning for local branches that can be safely deleted...
+Found 347 local branches
+📊 Large dataset detected - using optimized processing
+🔍 Consider using search/filtering to narrow down results
+⚡ Use --force flag to skip interactive mode for faster processing
+
+🔧 Using memory-optimized processing (estimated duration: 2 minutes)
+Fetching merged pull requests from GitHub...
+Found 89 merged pull requests
+
+Branch Analysis:
+  Safe to delete: 67
+  Unsafe to delete: 280
+
+Skipping unsafe branches:
+  - main (protected branch)
+  - develop (protected branch)
+  - feature/active-work (2 unpushed commits)
+  - hotfix/critical-fix (current branch)
+  ... and 276 more
+
+Found 67 items. Using enhanced selection mode for large datasets.
+
+Current selection: 67/67 items
+
+What would you like to do?
+> 🔍 Search/filter items
+  📦 Bulk actions
+  ✏️  Individual selection
+  📋 Review selected items (67)
+  ✅ Continue with current selection
+```
+
+#### Search and Filter Example
+
+```bash
+# Using search to filter branches
+? Enter search term (branch name pattern): feature/old
+Found 23 matches for "feature/old"
+
+Current selection: 23/23 items
+Search filter: "feature/old" (23 matches)
+```
+
+#### Bulk Actions Example
+
+```bash
+# Using regex patterns for bulk selection
+? Choose bulk action: Select by pattern - Select items matching a regex pattern
+? Enter regex pattern (e.g., "^feature/", ".*-old$"): ^hotfix/.*-2023$
+Selected 8 items matching pattern "^hotfix/.*-2023$"
+```
+
+### Performance Characteristics
+
+- **Small repositories (1-50 branches)**: Standard processing, interactive mode
+- **Medium repositories (51-200 branches)**: Batched processing, enhanced UI
+- **Large repositories (201-500 branches)**: Memory optimization, limited PR fetching
+- **Very large repositories (500+ branches)**: Full optimization suite with performance recommendations
+
 ### Safety Features
 
 The `local` command includes several safety checks to prevent accidental deletion of important branches:
@@ -145,6 +228,20 @@ The `local` command includes several safety checks to prevent accidental deletio
 - **Merge verification**: Only considers pull requests that were actually merged (not just closed)
 - **Unpushed commits protection**: Skips branches that have unpushed commits
 - **Dry-run mode**: Use `--dry-run` to see what would be deleted without making changes
+
+### Force Mode for Automation
+
+For automated workflows or when you trust the safety checks completely:
+
+```bash
+# Skip interactive mode and delete all safe branches automatically
+ghouls local --force
+```
+
+This is particularly useful for:
+- CI/CD cleanup jobs
+- Automated maintenance scripts
+- Large repositories where manual selection isn't practical
 
 ### Example Output
 
@@ -194,7 +291,7 @@ ghouls all --dry-run myorg/myrepo
 
 The command executes in two phases:
 1. **Remote cleanup**: Deletes merged remote branches first
-2. **Local cleanup**: Then deletes corresponding local branches
+2. **Local cleanup**: Then deletes corresponding local branches (with enhanced UI for large datasets)
 
 Even if one phase encounters errors, the command will continue with the next phase to ensure maximum cleanup.
 
@@ -228,6 +325,31 @@ Local cleanup: ✅ Success
 
 ✅ All cleanup operations completed successfully!
 ```
+
+# Performance Tips for Large Repositories
+
+When working with repositories that have hundreds or thousands of branches:
+
+## Memory and Performance Optimization
+- Ghouls automatically detects large datasets and enables optimized processing
+- Batch processing reduces memory usage and improves performance
+- Limited PR fetching (most recent 1000 PRs) prevents API rate limiting
+
+## Interactive Mode Efficiency
+- Use search/filtering to narrow down results before making selections
+- Leverage bulk actions for pattern-based selections (e.g., all branches from 2023)
+- Consider using `--force` flag for automated cleanup of safe branches
+
+## Best Practices
+- Run cleanup during off-peak hours for very large repositories (1000+ branches)
+- Use `--dry-run` first to understand the scope of changes
+- Consider running `git remote prune origin` before using Ghouls to clean up stale remote references
+
+## Repository Size Guidelines
+- **Small (1-50 branches)**: Standard processing, full interactive mode
+- **Medium (51-200 branches)**: Enhanced UI with search and bulk actions
+- **Large (201-500 branches)**: Memory optimization and progress reporting
+- **Very Large (500+ branches)**: Full optimization suite with smart recommendations
 
 # Development
 
