@@ -2,16 +2,16 @@
 
 <img src="logo.webp" alt="Ghouls Logo" width="200">
 
-
 The ghouls can help you.
 
 # Breaking Changes
 
 ## v2.0.0
+
 - **Command names have changed:**
   - `prunePullRequests` → `remote`
   - `pruneLocalBranches` → `local`
-  
+
   If you have scripts using the old commands, please update them to use the new shorter names.
 
 # Getting started
@@ -100,6 +100,7 @@ For other platforms and more installation options, visit: https://cli.github.com
 Safely deletes remote branches that have been merged via pull requests.
 
 Run from within a git repository (auto-detects repo):
+
 ```bash
 ghouls remote --dry-run
 ```
@@ -107,6 +108,7 @@ ghouls remote --dry-run
 The auto-detection feature works with both github.com and GitHub Enterprise repositories, automatically detecting the repository owner/name from the remote URL.
 
 Or specify a repository explicitly:
+
 ```bash
 ghouls remote --dry-run myorg/myrepo
 ```
@@ -125,11 +127,13 @@ $ ghouls remote myorg/myrepo
 Safely deletes local branches that have been merged via pull requests. This command includes comprehensive safety checks to protect important branches and work in progress.
 
 Run from within a git repository (auto-detects repo):
+
 ```bash
 ghouls local --dry-run
 ```
 
 Or specify a repository explicitly:
+
 ```bash
 ghouls local --dry-run myorg/myrepo
 ```
@@ -180,11 +184,13 @@ Summary:
 The `all` command combines both remote and local branch cleanup in a single operation, running them in sequence for maximum efficiency.
 
 Run from within a git repository (auto-detects repo):
+
 ```bash
 ghouls all --dry-run
 ```
 
 Or specify a repository explicitly:
+
 ```bash
 ghouls all --dry-run myorg/myrepo
 ```
@@ -192,6 +198,7 @@ ghouls all --dry-run myorg/myrepo
 ### Execution Order
 
 The command executes in two phases:
+
 1. **Remote cleanup**: Deletes merged remote branches first
 2. **Local cleanup**: Then deletes corresponding local branches
 
@@ -235,16 +242,19 @@ Local cleanup: ✅ Success
 The project uses Vitest for comprehensive unit testing.
 
 ### Run tests
+
 ```bash
 pnpm test
 ```
 
 ### Run tests in watch mode
+
 ```bash
 pnpm test:watch
 ```
 
 ### Generate coverage reports
+
 ```bash
 pnpm test:coverage
 ```
@@ -253,7 +263,7 @@ The test suite includes comprehensive unit tests covering all core functionality
 
 # Configuration
 
-Ghouls supports per-project configuration files to customize branch safety rules. This allows you to override default protected branches and add custom safety patterns specific to your project's workflow.
+Ghouls supports optional configuration to customize which branches are protected from deletion.
 
 ## Configuration File Locations
 
@@ -265,31 +275,23 @@ Ghouls looks for configuration files in the following order (first found takes p
 
 ## Configuration Format
 
-Create a JSON file with the following structure:
-
 ```json
 {
-  "protectedBranches": ["main", "master", "production"],
-  "additionalProtectedPatterns": ["release/.*", "hotfix/.*"],
-  "allowUnpushedCommits": false,
-  "requireMergedPR": true,
-  "customSafetyRules": [
-    {
-      "name": "temp-branches",
-      "pattern": "temp/.*",
-      "reason": "temporary experiment branch"
-    }
-    ]
-  }
+  "protectedBranches": ["main", "master", "production"]
 }
 ```
 
 ## Configuration Options
 
-### `protectedBranches` (array of strings)
+### `protectedBranches` (optional array of strings)
+
 List of branch names that should never be deleted (case-insensitive). When specified, this **replaces** the default protected branches.
 
 **Default**: `["main", "master", "develop", "dev", "staging", "production", "prod"]`
+
+## Examples
+
+### Custom protected branches
 
 ```json
 {
@@ -297,116 +299,10 @@ List of branch names that should never be deleted (case-insensitive). When speci
 }
 ```
 
-### `additionalProtectedPatterns` (array of regex strings)
-Additional regex patterns to protect branches. These are **added** to the protection rules without replacing defaults.
+### Minimal protection
 
 ```json
 {
-  "additionalProtectedPatterns": [
-    "release/.*",     // Protect all release branches
-    "hotfix/.*",      // Protect all hotfix branches
-    "feature/.*-wip$" // Protect WIP feature branches
-  ]
+  "protectedBranches": ["main"]
 }
-```
-
-### `allowUnpushedCommits` (boolean)
-Whether to allow deletion of branches with unpushed commits.
-
-**Default**: `false` (branches with unpushed commits are protected)
-
-```json
-{
-  "allowUnpushedCommits": true
-}
-```
-
-### `requireMergedPR` (boolean)
-Whether to require a merged pull request for branch deletion.
-
-**Default**: `true` (only branches with merged PRs can be deleted)
-
-```json
-{
-  "requireMergedPR": false
-}
-```
-
-### `customSafetyRules` (array of rule objects)
-Custom safety rules with regex patterns and custom error messages.
-
-```json
-{
-  "customSafetyRules": [
-    {
-      "name": "wip-branches",
-      "pattern": ".*-wip$",
-      "reason": "work in progress branch"
-    },
-    {
-      "name": "experiment-branches", 
-      "pattern": "^exp/.*",
-      "reason": "experimental feature branch"
-      }
-    ]
-  }
-}
-```
-
-## Example Configurations
-
-### Minimal Configuration
-```json
-{
-  "protectedBranches": ["main", "production"]
-}
-```
-
-### Advanced Team Configuration
-```json
-{
-  "protectedBranches": ["main", "develop", "staging", "production"],
-  "additionalProtectedPatterns": [
-    "release/v\\d+\\.\\d+\\.\\d+",
-    "hotfix/.*"
-  ],
-  "allowUnpushedCommits": false,
-  "requireMergedPR": true,
-  "customSafetyRules": [
-    {
-      "name": "temp-branches",
-        "pattern": "temp/.*",
-        "reason": "temporary testing branch"
-      },
-      {
-        "name": "wip-branches",
-        "pattern": ".*-wip$",
-        "reason": "work in progress"
-      }
-    ]
-  }
-}
-```
-
-### Relaxed Configuration
-```json
-{
-  "protectedBranches": ["main"],
-  "allowUnpushedCommits": true,
-  "requireMergedPR": false
-}
-```
-
-## Configuration Validation
-
-Ghouls validates configuration files and will show warnings for:
-- Invalid JSON syntax
-- Invalid regex patterns
-- Missing required fields
-- Incorrect data types
-
-Use the `--verbose` flag to see configuration loading details:
-
-```bash
-ghouls local --verbose
 ```
