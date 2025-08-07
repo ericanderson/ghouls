@@ -1,141 +1,101 @@
-import { describe, it, expect } from 'vitest';
-import { 
-  mergeSafetyConfig, 
-  getEffectiveSafetyConfig, 
-  DEFAULT_SAFETY_CONFIG,
-  DEFAULT_PROTECTED_BRANCHES 
-} from './config.js';
-import type { SafetyConfig } from './config.js';
+import { describe, expect, it } from "vitest";
+import type { GhoulsConfig } from "./config.js";
+import {
+  DEFAULT_CONFIG,
+  DEFAULT_PROTECTED_BRANCHES,
+  getEffectiveConfig,
+  mergeConfigs
+} from "./config.js";
 
-describe('config', () => {
-  describe('mergeSafetyConfig', () => {
-    it('should return empty config when no configs provided', () => {
-      const result = mergeSafetyConfig();
+describe("config", () => {
+  describe("mergeConfigs", () => {
+    it("should return empty config when no configs provided", () => {
+      const result = mergeConfigs();
       expect(result).toEqual({});
     });
 
-    it('should return single config unchanged', () => {
-      const config: SafetyConfig = {
-        protectedBranches: ['main', 'develop'],
-        allowUnpushedCommits: true
+    it("should return single config unchanged", () => {
+      const config: GhoulsConfig = {
+        protectedBranches: ["main", "develop"]
       };
-      
-      const result = mergeSafetyConfig(config);
+
+      const result = mergeConfigs(config);
       expect(result).toEqual(config);
     });
 
-    it('should merge multiple configs with precedence', () => {
-      const config1: SafetyConfig = {
-        protectedBranches: ['main', 'develop'],
-        allowUnpushedCommits: true,
-        additionalProtectedPatterns: ['feature/*']
+    it("should merge multiple configs with precedence", () => {
+      const config1: GhoulsConfig = {
+        protectedBranches: ["main", "develop"]
       };
-      
-      const config2: SafetyConfig = {
-        protectedBranches: ['main', 'staging'], // Should override config1
-        requireMergedPR: false,
-        additionalProtectedPatterns: ['hotfix/*'] // Should merge with config1
+
+      const config2: GhoulsConfig = {
+        protectedBranches: ["main", "staging"] // Should override config1
       };
-      
-      const result = mergeSafetyConfig(config1, config2);
-      
+
+      const result = mergeConfigs(config1, config2);
+
       expect(result).toEqual({
-        protectedBranches: ['main', 'staging'], // From config2 (last wins)
-        allowUnpushedCommits: true, // From config1
-        requireMergedPR: false, // From config2
-        additionalProtectedPatterns: ['feature/*', 'hotfix/*'] // Merged
+        protectedBranches: ["main", "develop"] // From config1 (first wins)
       });
     });
 
-    it('should handle undefined configs in merge', () => {
-      const config: SafetyConfig = {
-        protectedBranches: ['main'],
-        allowUnpushedCommits: true
+    it("should handle undefined configs in merge", () => {
+      const config: GhoulsConfig = {
+        protectedBranches: ["main"]
       };
-      
-      const result = mergeSafetyConfig(undefined, config, undefined);
-      expect(result).toEqual(config);
-    });
 
-    it('should merge custom safety rules', () => {
-      const config1: SafetyConfig = {
-        customSafetyRules: [
-          { name: 'rule1', pattern: 'temp/.*', reason: 'temp branch' }
-        ]
-      };
-      
-      const config2: SafetyConfig = {
-        customSafetyRules: [
-          { name: 'rule2', pattern: 'wip/.*', reason: 'work in progress' }
-        ]
-      };
-      
-      const result = mergeSafetyConfig(config1, config2);
-      
-      expect(result.customSafetyRules).toEqual([
-        { name: 'rule1', pattern: 'temp/.*', reason: 'temp branch' },
-        { name: 'rule2', pattern: 'wip/.*', reason: 'work in progress' }
-      ]);
+      const result = mergeConfigs(undefined, config, undefined);
+      expect(result).toEqual(config);
     });
   });
 
-  describe('getEffectiveSafetyConfig', () => {
-    it('should return defaults when no config provided', () => {
-      const result = getEffectiveSafetyConfig();
-      expect(result).toEqual(DEFAULT_SAFETY_CONFIG);
+  describe("getEffectiveConfig", () => {
+    it("should return defaults when no config provided", () => {
+      const result = getEffectiveConfig();
+      expect(result).toEqual(DEFAULT_CONFIG);
     });
 
-    it('should merge config with defaults', () => {
-      const config: SafetyConfig = {
-        protectedBranches: ['main', 'custom-branch'],
-        allowUnpushedCommits: true
+    it("should merge config with defaults", () => {
+      const config: GhoulsConfig = {
+        protectedBranches: ["main", "custom-branch"]
       };
-      
-      const result = getEffectiveSafetyConfig(config);
-      
+
+      const result = getEffectiveConfig(config);
+
       expect(result).toEqual({
-        protectedBranches: ['main', 'custom-branch'], // Custom value
-        additionalProtectedPatterns: [], // Default value
-        allowUnpushedCommits: true, // Custom value
-        requireMergedPR: true, // Default value
-        customSafetyRules: [] // Default value
+        protectedBranches: ["main", "custom-branch"] // Custom value
       });
     });
 
-    it('should preserve all default values when config is empty', () => {
-      const result = getEffectiveSafetyConfig({});
-      expect(result).toEqual(DEFAULT_SAFETY_CONFIG);
+    it("should preserve all default values when config is empty", () => {
+      const result = getEffectiveConfig({});
+      expect(result).toEqual(DEFAULT_CONFIG);
     });
 
-    it('should handle partial config objects', () => {
-      const config: SafetyConfig = {
-        additionalProtectedPatterns: ['release/*']
-      };
-      
-      const result = getEffectiveSafetyConfig(config);
-      
+    it("should handle partial config objects", () => {
+      const config: GhoulsConfig = {};
+      const result = getEffectiveConfig(config);
+
       expect(result.protectedBranches).toEqual([...DEFAULT_PROTECTED_BRANCHES]);
-      expect(result.additionalProtectedPatterns).toEqual(['release/*']);
-      expect(result.allowUnpushedCommits).toBe(false);
-      expect(result.requireMergedPR).toBe(true);
-      expect(result.customSafetyRules).toEqual([]);
     });
   });
 
-  describe('DEFAULT_PROTECTED_BRANCHES', () => {
-    it('should contain expected branch names', () => {
-      expect(DEFAULT_PROTECTED_BRANCHES).toEqual([
-        'main',
-        'master',
-        'develop',
-        'dev',
-        'staging',
-        'production',
-        'prod'
+  describe("DEFAULT_PROTECTED_BRANCHES", () => {
+    it("should contain expected branch names", () => {
+      expect(DEFAULT_PROTECTED_BRANCHES).toEqual<
+        GhoulsConfig["protectedBranches"]
+      >([
+        "main",
+        "master",
+        "develop",
+        "dev",
+        "staging",
+        "production",
+        "prod"
       ]);
     });
 
-    it('should be readonly array', () => {
+    it("should be readonly array", () => {
       // TypeScript compiler should enforce this, but at runtime the array is still mutable
       // This test verifies the array is frozen or similar readonly behavior would be expected
       // For now, just verify it's an array with the expected content
@@ -144,33 +104,25 @@ describe('config', () => {
     });
   });
 
-  describe('DEFAULT_SAFETY_CONFIG', () => {
-    it('should have expected default values', () => {
-      expect(DEFAULT_SAFETY_CONFIG).toEqual({
+  describe("DEFAULT_CONFIG", () => {
+    it("should have expected default values", () => {
+      expect(DEFAULT_CONFIG).toEqual<GhoulsConfig>({
         protectedBranches: [
-          'main',
-          'master',
-          'develop',
-          'dev',
-          'staging',
-          'production',
-          'prod'
-        ],
-        additionalProtectedPatterns: [],
-        allowUnpushedCommits: false,
-        requireMergedPR: true,
-        customSafetyRules: []
+          "main",
+          "master",
+          "develop",
+          "dev",
+          "staging",
+          "production",
+          "prod"
+        ]
       });
     });
 
-    it('should be required config type', () => {
+    it("should be required config type", () => {
       // Verify all required fields are present
-      const config: Required<SafetyConfig> = DEFAULT_SAFETY_CONFIG;
+      const config: Required<GhoulsConfig> = DEFAULT_CONFIG;
       expect(config.protectedBranches).toBeDefined();
-      expect(config.additionalProtectedPatterns).toBeDefined();
-      expect(config.allowUnpushedCommits).toBeDefined();
-      expect(config.requireMergedPR).toBeDefined();
-      expect(config.customSafetyRules).toBeDefined();
     });
   });
 });

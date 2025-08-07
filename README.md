@@ -260,7 +260,7 @@ Ghouls supports per-project configuration files to customize branch safety rules
 Ghouls looks for configuration files in the following order (first found takes precedence):
 
 1. **Environment variable**: `GHOULS_CONFIG=/path/to/config.json`
-2. **Repository root**: `.ghouls.json`, `.ghoulsrc.json`, or `ghouls.config.json`
+2. **Repository root**: `.config/ghouls.json`
 3. **User home**: `~/.config/ghouls/config.json`
 
 ## Configuration Format
@@ -269,18 +269,16 @@ Create a JSON file with the following structure:
 
 ```json
 {
-  "version": "1.0",
-  "safety": {
-    "protectedBranches": ["main", "master", "production"],
-    "additionalProtectedPatterns": ["release/.*", "hotfix/.*"],
-    "allowUnpushedCommits": false,
-    "requireMergedPR": true,
-    "customSafetyRules": [
-      {
-        "name": "temp-branches",
-        "pattern": "temp/.*",
-        "reason": "temporary experiment branch"
-      }
+  "protectedBranches": ["main", "master", "production"],
+  "additionalProtectedPatterns": ["release/.*", "hotfix/.*"],
+  "allowUnpushedCommits": false,
+  "requireMergedPR": true,
+  "customSafetyRules": [
+    {
+      "name": "temp-branches",
+      "pattern": "temp/.*",
+      "reason": "temporary experiment branch"
+    }
     ]
   }
 }
@@ -295,9 +293,7 @@ List of branch names that should never be deleted (case-insensitive). When speci
 
 ```json
 {
-  "safety": {
-    "protectedBranches": ["main", "production", "staging"]
-  }
+  "protectedBranches": ["main", "production", "staging"]
 }
 ```
 
@@ -306,13 +302,11 @@ Additional regex patterns to protect branches. These are **added** to the protec
 
 ```json
 {
-  "safety": {
-    "additionalProtectedPatterns": [
-      "release/.*",     // Protect all release branches
-      "hotfix/.*",      // Protect all hotfix branches
-      "feature/.*-wip$" // Protect WIP feature branches
-    ]
-  }
+  "additionalProtectedPatterns": [
+    "release/.*",     // Protect all release branches
+    "hotfix/.*",      // Protect all hotfix branches
+    "feature/.*-wip$" // Protect WIP feature branches
+  ]
 }
 ```
 
@@ -323,9 +317,7 @@ Whether to allow deletion of branches with unpushed commits.
 
 ```json
 {
-  "safety": {
-    "allowUnpushedCommits": true
-  }
+  "allowUnpushedCommits": true
 }
 ```
 
@@ -336,9 +328,7 @@ Whether to require a merged pull request for branch deletion.
 
 ```json
 {
-  "safety": {
-    "requireMergedPR": false
-  }
+  "requireMergedPR": false
 }
 ```
 
@@ -347,17 +337,16 @@ Custom safety rules with regex patterns and custom error messages.
 
 ```json
 {
-  "safety": {
-    "customSafetyRules": [
-      {
-        "name": "wip-branches",
-        "pattern": ".*-wip$",
-        "reason": "work in progress branch"
-      },
-      {
-        "name": "experiment-branches", 
-        "pattern": "^exp/.*",
-        "reason": "experimental feature branch"
+  "customSafetyRules": [
+    {
+      "name": "wip-branches",
+      "pattern": ".*-wip$",
+      "reason": "work in progress branch"
+    },
+    {
+      "name": "experiment-branches", 
+      "pattern": "^exp/.*",
+      "reason": "experimental feature branch"
       }
     ]
   }
@@ -369,27 +358,23 @@ Custom safety rules with regex patterns and custom error messages.
 ### Minimal Configuration
 ```json
 {
-  "safety": {
-    "protectedBranches": ["main", "production"]
-  }
+  "protectedBranches": ["main", "production"]
 }
 ```
 
 ### Advanced Team Configuration
 ```json
 {
-  "version": "1.0",
-  "safety": {
-    "protectedBranches": ["main", "develop", "staging", "production"],
-    "additionalProtectedPatterns": [
-      "release/v\\d+\\.\\d+\\.\\d+",
-      "hotfix/.*"
-    ],
-    "allowUnpushedCommits": false,
-    "requireMergedPR": true,
-    "customSafetyRules": [
-      {
-        "name": "temp-branches",
+  "protectedBranches": ["main", "develop", "staging", "production"],
+  "additionalProtectedPatterns": [
+    "release/v\\d+\\.\\d+\\.\\d+",
+    "hotfix/.*"
+  ],
+  "allowUnpushedCommits": false,
+  "requireMergedPR": true,
+  "customSafetyRules": [
+    {
+      "name": "temp-branches",
         "pattern": "temp/.*",
         "reason": "temporary testing branch"
       },
@@ -406,11 +391,9 @@ Custom safety rules with regex patterns and custom error messages.
 ### Relaxed Configuration
 ```json
 {
-  "safety": {
-    "protectedBranches": ["main"],
-    "allowUnpushedCommits": true,
-    "requireMergedPR": false
-  }
+  "protectedBranches": ["main"],
+  "allowUnpushedCommits": true,
+  "requireMergedPR": false
 }
 ```
 

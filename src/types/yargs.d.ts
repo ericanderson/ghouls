@@ -1,4 +1,4 @@
-declare module 'yargs' {
+declare module "yargs" {
   export interface CommandModule<T = any, U = any> {
     command?: string | string[];
     describe?: string | false;
@@ -19,6 +19,6 @@ declare module 'yargs' {
   export default yargs;
 }
 
-declare module 'yargs/helpers' {
+declare module "yargs/helpers" {
   export function hideBin(argv: string[]): string[];
 }
