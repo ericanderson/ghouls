@@ -83,9 +83,7 @@ export const DEFAULT_SAFETY_CONFIG: Required<SafetyConfig> = {
  * Configuration file discovery paths (in order of precedence)
  */
 export const CONFIG_FILE_NAMES = [
-  ".ghouls.json",
-  ".ghoulsrc.json",
-  "ghouls.config.json"
+  ".config/ghouls.json"
 ] as const;
 
 /**

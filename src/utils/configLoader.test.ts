@@ -73,7 +73,7 @@ describe('configLoader', () => {
       // Mock git root discovery
       mockedExistsSync.mockImplementation((path) => {
         if (path === '/current/dir/.git') return true;
-        if (path === '/current/dir/.ghouls.json') return true;
+        if (path === '/current/dir/.config/ghouls.json') return true;
         return false;
       });
       
@@ -85,7 +85,7 @@ describe('configLoader', () => {
       };
       
       mockedReadFileSync.mockImplementation((path) => {
-        if (path === '/current/dir/.ghouls.json') {
+        if (path === '/current/dir/.config/ghouls.json') {
           return JSON.stringify(mockConfig);
         }
         throw new Error('File not found');
@@ -133,7 +133,7 @@ describe('configLoader', () => {
       mockedExistsSync.mockImplementation((path) => {
         if (path === '/resolved//env/config.json') return true;
         if (path === '/current/dir/.git') return true;
-        if (path === '/current/dir/.ghouls.json') return true;
+        if (path === '/current/dir/.config/ghouls.json') return true;
         return false;
       });
       
@@ -141,7 +141,7 @@ describe('configLoader', () => {
         if (path === '/resolved//env/config.json') {
           return JSON.stringify(envConfig);
         }
-        if (path === '/current/dir/.ghouls.json') {
+        if (path === '/current/dir/.config/ghouls.json') {
           return JSON.stringify(repoConfig);
         }
         throw new Error('File not found');
@@ -341,7 +341,7 @@ describe('configLoader', () => {
       mockedExistsSync.mockImplementation((path) => {
         if (path === '/resolved//env/config.json') return true;
         if (path === '/current/dir/.git') return true;
-        if (path === '/current/dir/.ghouls.json') return true;
+        if (path === '/current/dir/.config/ghouls.json') return true;
         return false;
       });
       
@@ -349,7 +349,7 @@ describe('configLoader', () => {
         if (path === '/resolved//env/config.json') {
           return '{"safety": {"protectedBranches": ["main"]}}';
         }
-        if (path === '/current/dir/.ghouls.json') {
+        if (path === '/current/dir/.config/ghouls.json') {
           return 'invalid json';
         }
         throw new Error('File not found');
@@ -360,7 +360,7 @@ describe('configLoader', () => {
       expect(result).toEqual(
         expect.arrayContaining([
           { path: '/resolved//env/config.json', exists: true, loaded: true },
-          { path: '/current/dir/.ghouls.json', exists: true, loaded: false, error: expect.stringContaining('Invalid JSON') }
+          { path: '/current/dir/.config/ghouls.json', exists: true, loaded: false, error: expect.stringContaining('Invalid JSON') }
         ])
       );
     });

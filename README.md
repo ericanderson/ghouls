@@ -260,7 +260,7 @@ Ghouls supports per-project configuration files to customize branch safety rules
 Ghouls looks for configuration files in the following order (first found takes precedence):
 
 1. **Environment variable**: `GHOULS_CONFIG=/path/to/config.json`
-2. **Repository root**: `.ghouls.json`, `.ghoulsrc.json`, or `ghouls.config.json`
+2. **Repository root**: `.config/ghouls.json`
 3. **User home**: `~/.config/ghouls/config.json`
 
 ## Configuration Format
