@@ -3,16 +3,19 @@
  */
 export interface GhoulsConfig {
   /**
-   * List of branch names that should never be deleted (case-insensitive)
+   * List of branch names and patterns that should never be deleted (case-insensitive)
+   * Supports both exact branch names and glob patterns (e.g., "release/*", "hotfix-*")
    * Replaces the default protected branches if specified
    */
   protectedBranches?: string[];
 }
 
 /**
- * Default protected branch names (case-insensitive)
+ * Default protected branch names and patterns (case-insensitive)
+ * Supports both exact names and glob patterns
  */
 export const DEFAULT_PROTECTED_BRANCHES = [
+  // Exact branch names
   "main",
   "master",
   "develop",
@@ -20,6 +23,10 @@ export const DEFAULT_PROTECTED_BRANCHES = [
   "staging",
   "production",
   "prod",
+  // Glob patterns for release and hotfix branches
+  "release/*",
+  "release-*",
+  "hotfix/*",
 ] as const;
 
 /**

@@ -76,7 +76,7 @@ describe("config", () => {
   });
 
   describe("DEFAULT_PROTECTED_BRANCHES", () => {
-    it("should contain expected branch names", () => {
+    it("should contain expected branch names and patterns", () => {
       expect(DEFAULT_PROTECTED_BRANCHES).toEqual<
         GhoulsConfig["protectedBranches"]
       >([
@@ -87,6 +87,9 @@ describe("config", () => {
         "staging",
         "production",
         "prod",
+        "release/*",
+        "release-*",
+        "hotfix/*",
       ]);
     });
 
@@ -95,7 +98,7 @@ describe("config", () => {
       // This test verifies the array is frozen or similar readonly behavior would be expected
       // For now, just verify it's an array with the expected content
       expect(Array.isArray(DEFAULT_PROTECTED_BRANCHES)).toBe(true);
-      expect(DEFAULT_PROTECTED_BRANCHES.length).toBe(7);
+      expect(DEFAULT_PROTECTED_BRANCHES.length).toBe(10);
     });
   });
 
@@ -110,6 +113,9 @@ describe("config", () => {
           "staging",
           "production",
           "prod",
+          "release/*",
+          "release-*",
+          "hotfix/*",
         ],
       });
     });

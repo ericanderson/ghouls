@@ -1,3 +1,4 @@
+import micromatch from "micromatch";
 import { PullRequest } from "../OctokitPlus.js";
 import type { GhoulsConfig } from "../types/config.js";
 import { getEffectiveConfig } from "../types/config.js";
@@ -26,27 +27,12 @@ export function isBranchSafeToDelete(
     };
   }
 
-  // Check protected branch names (case-insensitive)
-  const protectedBranches = effectiveConfig.protectedBranches.map(b => b.toLowerCase());
-  if (protectedBranches.includes(branch.name.toLowerCase())) {
+  // Check protected branch names and patterns (case-insensitive)
+  const protectedPatterns = effectiveConfig.protectedBranches;
+  if (micromatch.isMatch(branch.name, protectedPatterns, { nocase: true })) {
     return {
       safe: false,
       reason: "protected branch",
-    };
-  }
-
-  // Never delete release or hotfix branches (pattern-based)
-  const branchLower = branch.name.toLowerCase();
-  const releasePatterns = [
-    /^release\//, // release/v1.0.0, release/1.0, etc.
-    /^release-/, // release-1.0, release-v1.0.0, etc.
-    /^hotfix\//, // hotfix/urgent-fix, hotfix/v1.0.1, etc.
-  ];
-
-  if (releasePatterns.some(pattern => pattern.test(branchLower))) {
-    return {
-      safe: false,
-      reason: "release/hotfix branch",
     };
   }
 
