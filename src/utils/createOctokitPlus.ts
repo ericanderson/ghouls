@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { OctokitPlus } from "../OctokitPlus.js";
-import { getGhToken } from "./getGhToken.js";
 import { getGhBaseUrl } from "./getGhBaseUrl.js";
+import { getGhToken } from "./getGhToken.js";
 import { detectGhCliError, formatGhCliError } from "./ghCliErrorHandler.js";
 
 export function createOctokitPlus() {
@@ -35,7 +35,7 @@ export function createOctokitPlus() {
 
   const octokit = new Octokit({
     baseUrl,
-    auth: token
+    auth: token,
   });
 
   return new OctokitPlus(octokit);

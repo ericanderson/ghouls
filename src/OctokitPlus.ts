@@ -61,7 +61,7 @@ export class OctokitPlus {
       .getRef({
         repo: prRef.repo.name,
         owner: prRef.repo.owner.login,
-        ref: `heads/${prRef.ref}`
+        ref: `heads/${prRef.ref}`,
       })
       .catch(convert404);
 
@@ -80,19 +80,20 @@ export class OctokitPlus {
     return this.octokit.rest.git.deleteRef({
       owner: prRef.repo.owner.login,
       repo: prRef.repo.name,
-      ref: `heads/${prRef.ref}`
+      ref: `heads/${prRef.ref}`,
     });
   }
 
   public async *getPullRequests(opts: Parameters<typeof this.octokit.rest.pulls.list>[0]) {
-    for await (const { data: pullRequests } of this.octokit.paginate.iterator(
-      this.octokit.rest.pulls.list,
-      opts
-    )) {
+    for await (
+      const { data: pullRequests } of this.octokit.paginate.iterator(
+        this.octokit.rest.pulls.list,
+        opts,
+      )
+    ) {
       for (const pr of pullRequests) {
         yield pr as PullRequest;
       }
     }
   }
 }
-

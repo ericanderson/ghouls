@@ -1,9 +1,9 @@
+import sourceMapSupport from "source-map-support";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { prunePullRequestsCommand } from "./commands/PrunePullRequests.js";
-import { pruneLocalBranchesCommand } from "./commands/PruneLocalBranches.js";
 import { pruneAllCommand } from "./commands/PruneAll.js";
-import sourceMapSupport from "source-map-support";
+import { pruneLocalBranchesCommand } from "./commands/PruneLocalBranches.js";
+import { prunePullRequestsCommand } from "./commands/PrunePullRequests.js";
 sourceMapSupport.install();
 
 export default function cli() {

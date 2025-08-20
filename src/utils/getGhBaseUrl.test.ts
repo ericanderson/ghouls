@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { execaSync } from 'execa';
-import { getGhBaseUrl } from './getGhBaseUrl.js';
-import { createMockExecaResult } from '../test/setup.js';
+import { execaSync } from "execa";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createMockExecaResult } from "../test/setup.js";
+import { getGhBaseUrl } from "./getGhBaseUrl.js";
 
 // Mock execa
-vi.mock('execa');
+vi.mock("execa");
 
 const mockedExecaSync = vi.mocked(execaSync);
 
-describe('getGhBaseUrl', () => {
+describe("getGhBaseUrl", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -17,30 +17,30 @@ describe('getGhBaseUrl', () => {
     vi.restoreAllMocks();
   });
 
-  it('should return GitHub.com API URL when logged in to github.com', () => {
+  it("should return GitHub.com API URL when logged in to github.com", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
-      stderr: '✓ Logged in to github.com account awesome-dude',
+      stdout: "",
+      stderr: "✓ Logged in to github.com account awesome-dude",
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
-    expect(mockedExecaSync).toHaveBeenCalledWith('gh', ['auth', 'status'], {
+    expect(result).toBe("https://api.github.com");
+    expect(mockedExecaSync).toHaveBeenCalledWith("gh", ["auth", "status"], {
       timeout: 10000,
-      reject: false
+      reject: false,
     });
   });
 
-  it('should return enterprise API URL when logged in to enterprise host', () => {
-    const enterpriseHost = 'github.enterprise.com';
+  it("should return enterprise API URL when logged in to enterprise host", () => {
+    const enterpriseHost = "github.enterprise.com";
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
+      stdout: "",
       stderr: `✓ Logged in to ${enterpriseHost} account user`,
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
@@ -48,13 +48,13 @@ describe('getGhBaseUrl', () => {
     expect(result).toBe(`https://${enterpriseHost}/api/v3`);
   });
 
-  it('should handle "Active account on" format', () => {
-    const enterpriseHost = 'github.company.com';
+  it("should handle \"Active account on\" format", () => {
+    const enterpriseHost = "github.company.com";
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
+      stdout: "",
       stderr: `Active account on ${enterpriseHost} (user123)`,
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
@@ -62,120 +62,120 @@ describe('getGhBaseUrl', () => {
     expect(result).toBe(`https://${enterpriseHost}/api/v3`);
   });
 
-  it('should parse host from stdout when stderr is empty', () => {
+  it("should parse host from stdout when stderr is empty", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '✓ Logged in to github.com account awesome-dude',
-      stderr: '',
+      stdout: "✓ Logged in to github.com account awesome-dude",
+      stderr: "",
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
+    expect(result).toBe("https://api.github.com");
   });
 
-  it('should handle multiline output with host on separate line', () => {
+  it("should handle multiline output with host on separate line", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
+      stdout: "",
       stderr: `github.enterprise.com
   ✓ Logged in to github.enterprise.com account user`,
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://github.enterprise.com/api/v3');
+    expect(result).toBe("https://github.enterprise.com/api/v3");
   });
 
-  it('should default to github.com when no host match found', () => {
+  it("should default to github.com when no host match found", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
-      stderr: 'No auth status found',
+      stdout: "",
+      stderr: "No auth status found",
       exitCode: 1,
-      command: 'gh auth status',
-      failed: true
+      command: "gh auth status",
+      failed: true,
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
+    expect(result).toBe("https://api.github.com");
   });
 
-  it('should default to github.com when both stdout and stderr are empty', () => {
+  it("should default to github.com when both stdout and stderr are empty", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
-      stderr: '',
+      stdout: "",
+      stderr: "",
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
+    expect(result).toBe("https://api.github.com");
   });
 
-  it('should throw when gh command is not found', () => {
+  it("should throw when gh command is not found", () => {
     const mockResult = createMockExecaResult({
-      stdout: '',
-      stderr: 'gh: command not found',
+      stdout: "",
+      stderr: "gh: command not found",
       exitCode: 127,
-      command: 'gh auth status',
-      failed: true
+      command: "gh auth status",
+      failed: true,
     });
     mockedExecaSync.mockReturnValue(mockResult);
 
     expect(() => getGhBaseUrl()).toThrow();
   });
 
-  it('should throw when execaSync throws an exception', () => {
+  it("should throw when execaSync throws an exception", () => {
     mockedExecaSync.mockImplementation(() => {
-      throw new Error('Command failed');
+      throw new Error("Command failed");
     });
 
-    expect(() => getGhBaseUrl()).toThrow('Command failed');
+    expect(() => getGhBaseUrl()).toThrow("Command failed");
   });
 
-  it('should handle timeout correctly', () => {
+  it("should handle timeout correctly", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
-      stderr: '',
+      stdout: "",
+      stderr: "",
       exitCode: 124,
-      command: 'gh auth status',
+      command: "gh auth status",
       failed: true,
-      timedOut: true
+      timedOut: true,
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
-    expect(mockedExecaSync).toHaveBeenCalledWith('gh', ['auth', 'status'], {
+    expect(result).toBe("https://api.github.com");
+    expect(mockedExecaSync).toHaveBeenCalledWith("gh", ["auth", "status"], {
       timeout: 10000,
-      reject: false
+      reject: false,
     });
   });
 
-  it('should handle case insensitive host matching', () => {
+  it("should handle case insensitive host matching", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
-      stderr: '✓ LOGGED IN TO github.com account user',
+      stdout: "",
+      stderr: "✓ LOGGED IN TO github.com account user",
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
+    expect(result).toBe("https://api.github.com");
   });
 
-  it('should handle complex enterprise domain names', () => {
-    const enterpriseHost = 'git.internal.company-name.co.uk';
+  it("should handle complex enterprise domain names", () => {
+    const enterpriseHost = "git.internal.company-name.co.uk";
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
+      stdout: "",
       stderr: `✓ Logged in to ${enterpriseHost} account user`,
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
@@ -183,16 +183,16 @@ describe('getGhBaseUrl', () => {
     expect(result).toBe(`https://${enterpriseHost}/api/v3`);
   });
 
-  it('should handle output with additional text after host', () => {
+  it("should handle output with additional text after host", () => {
     mockedExecaSync.mockReturnValue(createMockExecaResult({
-      stdout: '',
-      stderr: '✓ Logged in to github.com account awesome-dude (keyring)',
+      stdout: "",
+      stderr: "✓ Logged in to github.com account awesome-dude (keyring)",
       exitCode: 0,
-      command: 'gh auth status'
+      command: "gh auth status",
     }));
 
     const result = getGhBaseUrl();
 
-    expect(result).toBe('https://api.github.com');
+    expect(result).toBe("https://api.github.com");
   });
 });
