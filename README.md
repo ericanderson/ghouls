@@ -286,13 +286,56 @@ Ghouls looks for configuration files in the following order (first found takes p
 
 ### `protectedBranches` (optional array of strings)
 
-List of branch names that should never be deleted (case-insensitive). When specified, this **replaces** the default protected branches.
+List of branch names and patterns that should never be deleted (case-insensitive). Supports both exact branch names and glob patterns (e.g., `"release/*"`, `"hotfix-*"`).
 
-**Default**: `["main", "master", "develop", "dev", "staging", "production", "prod"]`
+**Default protected branches**: `["main", "master", "develop", "dev", "staging", "production", "prod", "release/*", "release-*", "hotfix/*"]`
+
+### Extending vs Replacing Default Protection
+
+You can either **replace** the default protected branches entirely, or **extend** them with additional custom branches using the `$GHOULS_DEFAULT` placeholder.
+
+#### Replace (Default Behavior)
+
+When you specify `protectedBranches` without the `$GHOULS_DEFAULT` placeholder, your configuration completely replaces the default protected branches:
+
+```json
+{
+  "protectedBranches": ["main", "production"]
+}
+```
+
+This will **only** protect `main` and `production` branches, ignoring all other default protections.
+
+#### Extend with `$GHOULS_DEFAULT`
+
+To keep all the default protected branches and add your own custom ones, use the `$GHOULS_DEFAULT` placeholder:
+
+```json
+{
+  "protectedBranches": ["$GHOULS_DEFAULT", "custom-branch", "feature-*"]
+}
+```
+
+The `$GHOULS_DEFAULT` placeholder gets expanded to include all default protected branches. You can position it anywhere in the array:
+
+```json
+{
+  "protectedBranches": ["urgent-*", "$GHOULS_DEFAULT", "experimental"]
+}
+```
+
+This approach is similar to Turborepo's `$TURBO_DEFAULT$` syntax and allows you to extend rather than replace the defaults.
+
+### Benefits of Using `$GHOULS_DEFAULT`
+
+- **Future-proof**: Automatically includes new default protections added in future Ghouls versions
+- **Safer**: Reduces risk of accidentally removing important default protections
+- **Cleaner**: Avoids duplicating the full list of default branches in your config
+- **Flexible**: Can be positioned anywhere in your array for custom ordering
 
 ## Examples
 
-### Custom protected branches
+### Replace with custom branches only
 
 ```json
 {
@@ -300,10 +343,34 @@ List of branch names that should never be deleted (case-insensitive). When speci
 }
 ```
 
-### Minimal protection
+### Extend defaults with custom branches
+
+```json
+{
+  "protectedBranches": ["$GHOULS_DEFAULT", "custom-branch", "feature-*"]
+}
+```
+
+### Custom branches with defaults at the end
+
+```json
+{
+  "protectedBranches": ["urgent-*", "experimental", "$GHOULS_DEFAULT"]
+}
+```
+
+### Minimal protection (main branch only)
 
 ```json
 {
   "protectedBranches": ["main"]
+}
+```
+
+### Use only defaults (explicit)
+
+```json
+{
+  "protectedBranches": ["$GHOULS_DEFAULT"]
 }
 ```
