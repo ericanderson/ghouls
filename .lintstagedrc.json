@@ -1,0 +1,8 @@
+{
+  "*.{ts,js}": [
+    "dprint fmt"
+  ],
+  "*.{json,md,yml,yaml,toml}": [
+    "dprint fmt"
+  ]
+}
