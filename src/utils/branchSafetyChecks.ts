@@ -1,7 +1,7 @@
 import micromatch from "micromatch";
+import { getEffectiveConfig } from "../config/getEffectiveConfig.js";
+import { GhoulsConfig } from "../config/GhoulsConfig.js";
 import { PullRequest } from "../OctokitPlus.js";
-import type { GhoulsConfig } from "../types/config.js";
-import { getEffectiveConfig } from "../types/config.js";
 import { getBranchStatus, LocalBranch } from "./localGitOperations.js";
 
 export interface SafetyCheckResult {

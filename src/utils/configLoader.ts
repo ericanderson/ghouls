@@ -6,9 +6,9 @@ import { findUpSync } from "find-up";
 import { existsSync, readFileSync } from "fs";
 import { homedir } from "os";
 import { dirname, join, resolve } from "path";
-import type { GhoulsConfig } from "../types/config.js";
-import { CONFIG_FILE_NAMES, mergeConfigs } from "../types/config.js";
-import { validateConfigWithZod } from "../types/configSchema.js";
+import { formatZodErrors } from "../config/formatZodErrors.js";
+import { CONFIG_FILE_NAMES, mergeConfigs } from "../config/getEffectiveConfig.js";
+import { GhoulsConfig } from "../config/GhoulsConfig.js";
 
 /**
  * Configuration loading error
@@ -52,14 +52,15 @@ function loadConfigFile(configPath: string): GhoulsConfig {
     }
 
     // Validate with Zod
-    const validationResult = validateConfigWithZod(parsedJson);
+    const validationResult = GhoulsConfig.safeParse(parsedJson);
 
     if (!validationResult.success) {
+      const errors = formatZodErrors(validationResult.error);
       throw new ConfigLoadError(
-        `Configuration validation failed: ${validationResult.errors.join(", ")}`,
+        `Configuration validation failed: ${errors.join(", ")}`,
         configPath,
         undefined,
-        validationResult.errors,
+        errors,
       );
     }
 

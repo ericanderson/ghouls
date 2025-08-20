@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "fs";
 import { homedir } from "os";
 import { dirname, join, resolve } from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { GhoulsConfig } from "../types/config.js";
+import { GhoulsConfig } from "../config/GhoulsConfig.js";
 import { ConfigLoadError, getConfigFilePaths, loadConfig, loadConfigSafe } from "./configLoader.js";
 
 // Mock filesystem operations

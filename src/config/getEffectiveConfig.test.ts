@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import type { GhoulsConfig } from "./config.js";
 import {
   DEFAULT_CONFIG,
   DEFAULT_PROTECTED_BRANCHES,
@@ -7,7 +6,8 @@ import {
   getEffectiveConfig,
   GHOULS_DEFAULT_PLACEHOLDER,
   mergeConfigs,
-} from "./config.js";
+} from "./getEffectiveConfig.js";
+import { GhoulsConfig } from "./GhoulsConfig.js";
 
 describe("config", () => {
   describe("mergeConfigs", () => {

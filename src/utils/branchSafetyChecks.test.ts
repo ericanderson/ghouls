@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GhoulsConfig } from "../config/GhoulsConfig.js";
 import type { PullRequest } from "../OctokitPlus.js";
-import { GhoulsConfig } from "../types/config.js";
 import { filterSafeBranches, isBranchSafeToDelete } from "./branchSafetyChecks.js";
 import type { LocalBranch } from "./localGitOperations.js";
 import { getBranchStatus } from "./localGitOperations.js";
