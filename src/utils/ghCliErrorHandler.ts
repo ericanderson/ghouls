@@ -14,22 +14,22 @@ export function detectGhCliError(error: unknown): GhCliError | null {
 
   // Check if it's an ExecaSyncError
   const execaError = error as ExecaSyncError;
-  
+
   // Check for gh not installed
   if (isGhNotInstalledError(execaError)) {
     return {
       type: "not-installed",
       message: "GitHub CLI (gh) is not installed.",
-      instructions: getGhInstallationInstructions()
+      instructions: getGhInstallationInstructions(),
     };
   }
 
   // Check for gh not authenticated
   if (isGhNotAuthenticatedError(execaError)) {
     return {
-      type: "not-authenticated", 
+      type: "not-authenticated",
       message: "GitHub CLI is not authenticated.",
-      instructions: getGhAuthenticationInstructions()
+      instructions: getGhAuthenticationInstructions(),
     };
   }
 
@@ -43,10 +43,12 @@ export function isGhNotInstalledError(error: ExecaSyncError): boolean {
   }
 
   // Check stderr for common "command not found" messages
-  const stderr = typeof error.stderr === 'string' ? error.stderr.toLowerCase() : "";
-  if (stderr.includes("command not found") || 
-      stderr.includes("not found") ||
-      stderr.includes("cannot find")) {
+  const stderr = typeof error.stderr === "string" ? error.stderr.toLowerCase() : "";
+  if (
+    stderr.includes("command not found")
+    || stderr.includes("not found")
+    || stderr.includes("cannot find")
+  ) {
     return true;
   }
 
@@ -59,16 +61,18 @@ export function isGhNotInstalledError(error: ExecaSyncError): boolean {
 }
 
 export function isGhNotAuthenticatedError(error: ExecaSyncError): boolean {
-  const stderr = typeof error.stderr === 'string' ? error.stderr : "";
-  const stdout = typeof error.stdout === 'string' ? error.stdout : "";
+  const stderr = typeof error.stderr === "string" ? error.stderr : "";
+  const stdout = typeof error.stdout === "string" ? error.stdout : "";
   const combined = `${stderr} ${stdout}`.toLowerCase();
 
   // Check for authentication-related messages
-  if (combined.includes("gh auth login") ||
-      combined.includes("not authenticated") ||
-      combined.includes("no github token") ||
-      combined.includes("please authenticate") ||
-      combined.includes("to get started with github cli")) {
+  if (
+    combined.includes("gh auth login")
+    || combined.includes("not authenticated")
+    || combined.includes("no github token")
+    || combined.includes("please authenticate")
+    || combined.includes("to get started with github cli")
+  ) {
     return true;
   }
 

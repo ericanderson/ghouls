@@ -18,9 +18,13 @@ export interface BranchStatus {
 export function getLocalBranches(): LocalBranch[] {
   try {
     // Get all local branches with their SHAs, current branch indicator, and commit date
-    const { stdout } = execaSync("git", ["branch", "-v", "--format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)"], {
+    const { stdout } = execaSync("git", [
+      "branch",
+      "-v",
+      "--format=%(refname:short)|%(objectname)|%(HEAD)|%(committerdate:iso)",
+    ], {
       timeout: 10000,
-      reject: false
+      reject: false,
     });
 
     if (!stdout) {
@@ -35,12 +39,12 @@ export function getLocalBranches(): LocalBranch[] {
         if (parts.length !== 4) {
           throw new Error(`Unexpected git branch output format: ${line}`);
         }
-        
+
         return {
           name: parts[0].trim(),
           sha: parts[1].trim(),
           isCurrent: parts[2].trim() === "*",
-          lastCommitDate: parts[3].trim()
+          lastCommitDate: parts[3].trim(),
         };
       });
   } catch (error) {
@@ -55,7 +59,7 @@ export function getCurrentBranch(): string {
   try {
     const { stdout } = execaSync("git", ["branch", "--show-current"], {
       timeout: 5000,
-      reject: false
+      reject: false,
     });
 
     return stdout.trim();
@@ -72,7 +76,7 @@ export function getBranchStatus(branchName: string): BranchStatus | null {
     // First check if the branch has an upstream
     const { stdout: upstreamResult } = execaSync("git", ["rev-parse", "--abbrev-ref", `${branchName}@{upstream}`], {
       timeout: 5000,
-      reject: false
+      reject: false,
     });
 
     if (!upstreamResult) {
@@ -85,7 +89,7 @@ export function getBranchStatus(branchName: string): BranchStatus | null {
     // Get ahead/behind status
     const { stdout } = execaSync("git", ["rev-list", "--count", "--left-right", `${upstream}...${branchName}`], {
       timeout: 5000,
-      reject: false
+      reject: false,
     });
 
     const parts = stdout.trim().split("\t");
@@ -95,7 +99,7 @@ export function getBranchStatus(branchName: string): BranchStatus | null {
 
     return {
       behind: parseInt(parts[0], 10) || 0,
-      ahead: parseInt(parts[1], 10) || 0
+      ahead: parseInt(parts[1], 10) || 0,
     };
   } catch (error) {
     // If we can't determine status, assume it's not safe to delete
@@ -110,7 +114,7 @@ export function deleteLocalBranch(branchName: string, force: boolean = false): v
   try {
     const args = ["branch", force ? "-D" : "-d", branchName];
     execaSync("git", args, {
-      timeout: 10000
+      timeout: 10000,
     });
   } catch (error) {
     throw new Error(`Failed to delete branch ${branchName}: ${error instanceof Error ? error.message : String(error)}`);
@@ -124,7 +128,7 @@ export function isGitRepository(): boolean {
   try {
     execaSync("git", ["rev-parse", "--git-dir"], {
       timeout: 5000,
-      reject: false
+      reject: false,
     });
     return true;
   } catch {

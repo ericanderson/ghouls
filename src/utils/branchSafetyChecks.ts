@@ -1,5 +1,5 @@
-import { LocalBranch, getBranchStatus } from "./localGitOperations.js";
 import { PullRequest } from "../OctokitPlus.js";
+import { getBranchStatus, LocalBranch } from "./localGitOperations.js";
 
 export interface SafetyCheckResult {
   safe: boolean;
@@ -12,13 +12,13 @@ export interface SafetyCheckResult {
 export function isBranchSafeToDelete(
   branch: LocalBranch,
   currentBranch: string,
-  matchingPR?: PullRequest
+  matchingPR?: PullRequest,
 ): SafetyCheckResult {
   // Never delete the current branch
   if (branch.isCurrent || branch.name === currentBranch) {
     return {
       safe: false,
-      reason: "current branch"
+      reason: "current branch",
     };
   }
 
@@ -27,7 +27,7 @@ export function isBranchSafeToDelete(
   if (protectedBranches.includes(branch.name.toLowerCase())) {
     return {
       safe: false,
-      reason: "protected branch"
+      reason: "protected branch",
     };
   }
 
@@ -51,7 +51,7 @@ export function isBranchSafeToDelete(
     if (branch.sha !== matchingPR.head.sha) {
       return {
         safe: false,
-        reason: "SHA mismatch with PR head"
+        reason: "SHA mismatch with PR head",
       };
     }
 
@@ -59,7 +59,7 @@ export function isBranchSafeToDelete(
     if (!matchingPR.merge_commit_sha) {
       return {
         safe: false,
-        reason: "PR was not merged"
+        reason: "PR was not merged",
       };
     }
   }
@@ -69,7 +69,7 @@ export function isBranchSafeToDelete(
   if (branchStatus && branchStatus.ahead > 0) {
     return {
       safe: false,
-      reason: `${branchStatus.ahead} unpushed commit${branchStatus.ahead === 1 ? '' : 's'}`
+      reason: `${branchStatus.ahead} unpushed commit${branchStatus.ahead === 1 ? "" : "s"}`,
     };
   }
 
@@ -82,16 +82,16 @@ export function isBranchSafeToDelete(
 export function filterSafeBranches(
   branches: LocalBranch[],
   currentBranch: string,
-  mergedPRs: Map<string, PullRequest> = new Map()
+  mergedPRs: Map<string, PullRequest> = new Map(),
 ): Array<{ branch: LocalBranch; safetyCheck: SafetyCheckResult; matchingPR?: PullRequest }> {
   return branches.map(branch => {
     const matchingPR = mergedPRs.get(branch.name);
     const safetyCheck = isBranchSafeToDelete(branch, currentBranch, matchingPR);
-    
+
     return {
       branch,
       safetyCheck,
-      matchingPR
+      matchingPR,
     };
   });
 }
