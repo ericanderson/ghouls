@@ -1,10 +1,10 @@
-import type { CommandModule } from "yargs";
-import { createOctokitPlus } from "../utils/createOctokitPlus.js";
-import ProgressBar from "progress";
-import { PullRequest, OctokitPlus } from "../OctokitPlus.js";
-import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch.js";
-import { getGitRemote } from "../utils/getGitRemote.js";
 import inquirer from "inquirer";
+import ProgressBar from "progress";
+import type { CommandModule } from "yargs";
+import { OctokitPlus, PullRequest } from "../OctokitPlus.js";
+import { createOctokitPlus } from "../utils/createOctokitPlus.js";
+import { getGitRemote } from "../utils/getGitRemote.js";
+import { ownerAndRepoMatch } from "../utils/ownerAndRepoMatch.js";
 
 export const prunePullRequestsCommand: CommandModule = {
   handler: async (args: any) => {
@@ -19,7 +19,9 @@ export const prunePullRequestsCommand: CommandModule = {
       // Try to get from git remote
       const gitRemote = getGitRemote();
       if (!gitRemote) {
-        throw new Error("No repo specified and unable to detect from git remote. Please run from a git repository or specify owner/repo.");
+        throw new Error(
+          "No repo specified and unable to detect from git remote. Please run from a git repository or specify owner/repo.",
+        );
       }
       owner = gitRemote.owner;
       repo = gitRemote.repo;
@@ -30,7 +32,7 @@ export const prunePullRequestsCommand: CommandModule = {
       args.dryRun,
       args.force,
       owner,
-      repo
+      repo,
     );
 
     await prunePullRequest.perform();
@@ -42,11 +44,11 @@ export const prunePullRequestsCommand: CommandModule = {
       .env()
       .option("dry-run", {
         type: "boolean",
-        description: "Perform a dry run (show what would be deleted)"
+        description: "Perform a dry run (show what would be deleted)",
       })
       .option("force", {
         type: "boolean",
-        description: "Skip interactive mode and delete all merged branches automatically"
+        description: "Skip interactive mode and delete all merged branches automatically",
       })
       .positional("repo", {
         type: "string",
@@ -54,28 +56,32 @@ export const prunePullRequestsCommand: CommandModule = {
           if (!s) {
             return undefined;
           }
-          
+
           // Validate repo string format (owner/repo)
           const parts = s.split("/");
           if (parts.length !== 2 || !parts[0] || !parts[1]) {
             throw new Error("Repository must be in the format 'owner/repo'");
           }
-          
+
           // Validate owner and repo names (GitHub naming rules)
           const ownerRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/;
           const repoRegex = /^[a-zA-Z0-9._-]+$/;
-          
+
           if (!ownerRegex.test(parts[0])) {
-            throw new Error("Invalid owner name. Must contain only alphanumeric characters and hyphens, and cannot start or end with a hyphen.");
+            throw new Error(
+              "Invalid owner name. Must contain only alphanumeric characters and hyphens, and cannot start or end with a hyphen.",
+            );
           }
-          
+
           if (!repoRegex.test(parts[1])) {
-            throw new Error("Invalid repository name. Must contain only alphanumeric characters, dots, underscores, and hyphens.");
+            throw new Error(
+              "Invalid repository name. Must contain only alphanumeric characters, dots, underscores, and hyphens.",
+            );
           }
-          
+
           return { owner: parts[0], repo: parts[1] };
-        }
-      })
+        },
+      }),
 };
 
 interface BranchToDelete {
@@ -89,15 +95,15 @@ class PrunePullRequest {
     private dryRun: boolean,
     private force: boolean,
     private owner: string,
-    private repo: string
+    private repo: string,
   ) {}
 
   public async perform() {
     console.log("\nScanning for remote branches that can be safely deleted...");
-    
+
     // First collect all branches that can be deleted
     const branchesToDelete = await this.collectDeletableBranches();
-    
+
     if (branchesToDelete.length === 0) {
       console.log("\nNo branches found that can be safely deleted.");
       return;
@@ -107,26 +113,26 @@ class PrunePullRequest {
 
     // Get branches to delete based on mode
     let selectedBranches = branchesToDelete;
-    
+
     if (!this.force && !this.dryRun) {
       // Interactive mode
       const choices = branchesToDelete.map(({ ref, pr }) => {
-        const mergeDate = pr.merged_at ? new Date(pr.merged_at).toLocaleDateString() : 'unknown';
+        const mergeDate = pr.merged_at ? new Date(pr.merged_at).toLocaleDateString() : "unknown";
         return {
-          name: `${ref} (PR #${pr.number}: ${pr.title || 'No title'}, merged: ${mergeDate})`,
+          name: `${ref} (PR #${pr.number}: ${pr.title || "No title"}, merged: ${mergeDate})`,
           value: ref,
-          checked: true
+          checked: true,
         };
       });
 
       const { selected } = await inquirer.prompt([
         {
-          type: 'checkbox',
-          name: 'selected',
-          message: 'Select remote branches to delete:',
+          type: "checkbox",
+          name: "selected",
+          message: "Select remote branches to delete:",
           choices,
-          pageSize: 20
-        }
+          pageSize: 20,
+        },
       ]);
 
       if (selected.length === 0) {
@@ -134,17 +140,19 @@ class PrunePullRequest {
         return;
       }
 
-      selectedBranches = branchesToDelete.filter(({ ref }) => 
-        selected.includes(ref)
-      );
+      selectedBranches = branchesToDelete.filter(({ ref }) => selected.includes(ref));
     }
 
     // Delete selected branches
-    console.log(`\n${this.dryRun ? 'Would delete' : 'Deleting'} ${selectedBranches.length} branch${selectedBranches.length === 1 ? '' : 'es'}:`);
-    
+    console.log(
+      `\n${this.dryRun ? "Would delete" : "Deleting"} ${selectedBranches.length} branch${
+        selectedBranches.length === 1 ? "" : "es"
+      }:`,
+    );
+
     const bar = new ProgressBar(":bar :branch (:current/:total)", {
       total: selectedBranches.length,
-      width: 30
+      width: 30,
     });
 
     let deletedCount = 0;
@@ -173,11 +181,11 @@ class PrunePullRequest {
     // Summary
     console.log(`\nSummary:`);
     if (this.dryRun) {
-      console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`);
     } else {
-      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? '' : 'es'}`);
+      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`);
     }
-    
+
     if (errorCount > 0) {
       console.log(`  Errors: ${errorCount}`);
     }
@@ -185,14 +193,14 @@ class PrunePullRequest {
 
   private async collectDeletableBranches(): Promise<BranchToDelete[]> {
     const branchesToDelete: BranchToDelete[] = [];
-    
+
     const pullRequests = this.octokitPlus.getPullRequests({
       repo: this.repo,
       owner: this.owner,
       per_page: 100,
       state: "closed",
       sort: "updated",
-      direction: "desc"
+      direction: "desc",
     });
 
     for await (const pr of pullRequests) {
@@ -212,7 +220,7 @@ class PrunePullRequest {
 
       branchesToDelete.push({
         ref: `heads/${pr.head.ref}`,
-        pr
+        pr,
       });
     }
 

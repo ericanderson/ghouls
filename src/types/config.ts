@@ -19,21 +19,21 @@ export const DEFAULT_PROTECTED_BRANCHES = [
   "dev",
   "staging",
   "production",
-  "prod"
+  "prod",
 ] as const;
 
 /**
  * Default configuration
  */
 export const DEFAULT_CONFIG: Required<GhoulsConfig> = {
-  protectedBranches: [...DEFAULT_PROTECTED_BRANCHES]
+  protectedBranches: [...DEFAULT_PROTECTED_BRANCHES],
 };
 
 /**
  * Configuration file discovery paths (in order of precedence)
  */
 export const CONFIG_FILE_NAMES = [
-  ".config/ghouls.json"
+  ".config/ghouls.json",
 ] as const;
 
 /**
@@ -63,6 +63,6 @@ export function getEffectiveConfig(config?: GhoulsConfig): Required<GhoulsConfig
   const merged = mergeConfigs(config, DEFAULT_CONFIG);
 
   return {
-    protectedBranches: merged.protectedBranches || DEFAULT_CONFIG.protectedBranches
+    protectedBranches: merged.protectedBranches || DEFAULT_CONFIG.protectedBranches,
   };
 }

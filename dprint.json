@@ -1,8 +1,7 @@
 {
   "typescript": {
-    "lineWidth": 100,
-    "indentWidth": 2,
-    "trailingCommas": "never"
+    "lineWidth": 120,
+    "indentWidth": 2
   },
   "json": {
   },

@@ -8,7 +8,7 @@ import { z } from "zod";
  * Complete Ghouls configuration schema
  */
 export const ghoulsConfigSchema = z.object({
-  protectedBranches: z.array(z.string().min(1, "Branch name cannot be empty")).optional()
+  protectedBranches: z.array(z.string().min(1, "Branch name cannot be empty")).optional(),
 });
 
 /**
@@ -31,7 +31,7 @@ export function validateConfigWithZod(config: unknown): {
   if (result.success) {
     return {
       success: true,
-      data: result.data
+      data: result.data,
     };
   }
 
@@ -40,6 +40,6 @@ export function validateConfigWithZod(config: unknown): {
     errors: result.error.issues.map(issue => {
       const path = issue.path.length > 0 ? `${issue.path.join(".")}: ` : "";
       return `${path}${issue.message}`;
-    })
+    }),
   };
 }

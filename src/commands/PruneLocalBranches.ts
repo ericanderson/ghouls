@@ -6,12 +6,7 @@ import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
 import { loadConfigSafe } from "../utils/configLoader.js";
 import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import { getGitRemote } from "../utils/getGitRemote.js";
-import {
-  deleteLocalBranch,
-  getCurrentBranch,
-  getLocalBranches,
-  isGitRepository,
-} from "../utils/localGitOperations.js";
+import { deleteLocalBranch, getCurrentBranch, getLocalBranches, isGitRepository } from "../utils/localGitOperations.js";
 
 export const pruneLocalBranchesCommand: CommandModule = {
   handler: async (args: any) => {
@@ -60,8 +55,7 @@ export const pruneLocalBranchesCommand: CommandModule = {
       })
       .option("force", {
         type: "boolean",
-        description:
-          "Skip interactive mode and delete all safe branches automatically",
+        description: "Skip interactive mode and delete all safe branches automatically",
       })
       .positional("repo", {
         type: "string",
@@ -135,12 +129,8 @@ class PruneLocalBranches {
       mergedPRs,
       config,
     );
-    const safeBranches = branchAnalysis.filter(analysis =>
-      analysis.safetyCheck.safe
-    );
-    const unsafeBranches = branchAnalysis.filter(analysis =>
-      !analysis.safetyCheck.safe
-    );
+    const safeBranches = branchAnalysis.filter(analysis => analysis.safetyCheck.safe);
+    const unsafeBranches = branchAnalysis.filter(analysis => !analysis.safetyCheck.safe);
 
     console.log(`\nBranch Analysis:`);
     console.log(`  Safe to delete: ${safeBranches.length}`);
@@ -191,16 +181,12 @@ class PruneLocalBranches {
         return;
       }
 
-      branchesToDelete = safeBranches.filter(({ branch }) =>
-        selectedBranches.includes(branch.name)
-      );
+      branchesToDelete = safeBranches.filter(({ branch }) => selectedBranches.includes(branch.name));
     }
 
     // Show what will be deleted
     console.log(
-      `\n${
-        this.dryRun ? "Would delete" : "Deleting"
-      } ${branchesToDelete.length} branch${
+      `\n${this.dryRun ? "Would delete" : "Deleting"} ${branchesToDelete.length} branch${
         branchesToDelete.length === 1 ? "" : "es"
       }:`,
     );
@@ -248,9 +234,7 @@ class PruneLocalBranches {
         }
         deletedCount++;
       } catch (error) {
-        const message = `Error deleting ${branch.name}: ${
-          error instanceof Error ? error.message : String(error)
-        }`;
+        const message = `Error deleting ${branch.name}: ${error instanceof Error ? error.message : String(error)}`;
         if (bar) {
           bar.interrupt(message);
         } else {
@@ -269,15 +253,11 @@ class PruneLocalBranches {
     console.log(`\nSummary:`);
     if (this.dryRun) {
       console.log(
-        `  Would delete: ${deletedCount} branch${
-          deletedCount === 1 ? "" : "es"
-        }`,
+        `  Would delete: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`,
       );
     } else {
       console.log(
-        `  Successfully deleted: ${deletedCount} branch${
-          deletedCount === 1 ? "" : "es"
-        }`,
+        `  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`,
       );
     }
 

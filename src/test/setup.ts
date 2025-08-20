@@ -1,30 +1,32 @@
-import { expect } from 'vitest';
+import { expect } from "vitest";
 
 // Global test setup and utilities
 
 /**
  * Helper to create a mock execa result with default values
  */
-export function createMockExecaResult(overrides: Partial<{
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-  failed: boolean;
-  timedOut: boolean;
-  command: string;
-  killed: boolean;
-}>) {
+export function createMockExecaResult(
+  overrides: Partial<{
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+    failed: boolean;
+    timedOut: boolean;
+    command: string;
+    killed: boolean;
+  }>,
+) {
   return {
-    stdout: '',
-    stderr: '',
+    stdout: "",
+    stderr: "",
     exitCode: 0,
-    command: overrides.command || 'mock-command',
-    escapedCommand: overrides.command || 'mock-command',
+    command: overrides.command || "mock-command",
+    escapedCommand: overrides.command || "mock-command",
     failed: false,
     timedOut: false,
     isCanceled: false,
     killed: false,
-    ...overrides
+    ...overrides,
   } as any;
 }
 
@@ -37,8 +39,8 @@ export function expectGhCliTimeout(mockFn: any, timeout: number) {
     expect.anything(),
     expect.objectContaining({
       timeout,
-      reject: false
-    })
+      reject: false,
+    }),
   );
 }
 
@@ -51,7 +53,7 @@ export function expectGitTimeout(mockFn: any, timeout: number) {
     expect.anything(),
     expect.objectContaining({
       timeout,
-      reject: false
-    })
+      reject: false,
+    }),
   );
 }

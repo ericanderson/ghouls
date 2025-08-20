@@ -15,14 +15,14 @@ export function isBranchSafeToDelete(
   branch: LocalBranch,
   currentBranch: string,
   matchingPR?: PullRequest,
-  config?: GhoulsConfig
+  config?: GhoulsConfig,
 ): SafetyCheckResult {
   const effectiveConfig = getEffectiveConfig(config);
   // Never delete the current branch
   if (branch.isCurrent || branch.name === currentBranch) {
     return {
       safe: false,
-      reason: "current branch"
+      reason: "current branch",
     };
   }
 
@@ -31,7 +31,7 @@ export function isBranchSafeToDelete(
   if (protectedBranches.includes(branch.name.toLowerCase())) {
     return {
       safe: false,
-      reason: "protected branch"
+      reason: "protected branch",
     };
   }
 
@@ -40,7 +40,7 @@ export function isBranchSafeToDelete(
     if (branch.sha !== matchingPR.head.sha) {
       return {
         safe: false,
-        reason: "SHA mismatch with PR head"
+        reason: "SHA mismatch with PR head",
       };
     }
 
@@ -48,7 +48,7 @@ export function isBranchSafeToDelete(
     if (!matchingPR.merge_commit_sha) {
       return {
         safe: false,
-        reason: "PR was not merged"
+        reason: "PR was not merged",
       };
     }
   }
@@ -57,7 +57,7 @@ export function isBranchSafeToDelete(
   if (branchStatus && branchStatus.ahead > 0) {
     return {
       safe: false,
-      reason: `${branchStatus.ahead} unpushed commit${branchStatus.ahead === 1 ? "" : "s"}`
+      reason: `${branchStatus.ahead} unpushed commit${branchStatus.ahead === 1 ? "" : "s"}`,
     };
   }
 
@@ -71,7 +71,7 @@ export function filterSafeBranches(
   branches: LocalBranch[],
   currentBranch: string,
   mergedPRs: Map<string, PullRequest> = new Map(),
-  config?: GhoulsConfig
+  config?: GhoulsConfig,
 ): Array<{ branch: LocalBranch; safetyCheck: SafetyCheckResult; matchingPR?: PullRequest }> {
   return branches.map(branch => {
     const matchingPR = mergedPRs.get(branch.name);
@@ -80,7 +80,7 @@ export function filterSafeBranches(
     return {
       branch,
       safetyCheck,
-      matchingPR
+      matchingPR,
     };
   });
 }

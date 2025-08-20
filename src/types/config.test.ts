@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { GhoulsConfig } from "./config.js";
-import {
-  DEFAULT_CONFIG,
-  DEFAULT_PROTECTED_BRANCHES,
-  getEffectiveConfig,
-  mergeConfigs
-} from "./config.js";
+import { DEFAULT_CONFIG, DEFAULT_PROTECTED_BRANCHES, getEffectiveConfig, mergeConfigs } from "./config.js";
 
 describe("config", () => {
   describe("mergeConfigs", () => {
@@ -16,7 +11,7 @@ describe("config", () => {
 
     it("should return single config unchanged", () => {
       const config: GhoulsConfig = {
-        protectedBranches: ["main", "develop"]
+        protectedBranches: ["main", "develop"],
       };
 
       const result = mergeConfigs(config);
@@ -25,23 +20,23 @@ describe("config", () => {
 
     it("should merge multiple configs with precedence", () => {
       const config1: GhoulsConfig = {
-        protectedBranches: ["main", "develop"]
+        protectedBranches: ["main", "develop"],
       };
 
       const config2: GhoulsConfig = {
-        protectedBranches: ["main", "staging"] // Should override config1
+        protectedBranches: ["main", "staging"], // Should override config1
       };
 
       const result = mergeConfigs(config1, config2);
 
       expect(result).toEqual({
-        protectedBranches: ["main", "develop"] // From config1 (first wins)
+        protectedBranches: ["main", "develop"], // From config1 (first wins)
       });
     });
 
     it("should handle undefined configs in merge", () => {
       const config: GhoulsConfig = {
-        protectedBranches: ["main"]
+        protectedBranches: ["main"],
       };
 
       const result = mergeConfigs(undefined, config, undefined);
@@ -57,13 +52,13 @@ describe("config", () => {
 
     it("should merge config with defaults", () => {
       const config: GhoulsConfig = {
-        protectedBranches: ["main", "custom-branch"]
+        protectedBranches: ["main", "custom-branch"],
       };
 
       const result = getEffectiveConfig(config);
 
       expect(result).toEqual({
-        protectedBranches: ["main", "custom-branch"] // Custom value
+        protectedBranches: ["main", "custom-branch"], // Custom value
       });
     });
 
@@ -91,7 +86,7 @@ describe("config", () => {
         "dev",
         "staging",
         "production",
-        "prod"
+        "prod",
       ]);
     });
 
@@ -114,8 +109,8 @@ describe("config", () => {
           "dev",
           "staging",
           "production",
-          "prod"
-        ]
+          "prod",
+        ],
       });
     });
 

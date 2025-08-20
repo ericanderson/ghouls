@@ -22,16 +22,16 @@ describe("branchSafetyChecks", () => {
     const createLocalBranch = (
       name: string,
       sha: string,
-      isCurrent: boolean = false
+      isCurrent: boolean = false,
     ): LocalBranch => ({
       name,
       sha,
-      isCurrent
+      isCurrent,
     });
 
     const createPullRequest = (
       headSha: string,
-      mergeCommitSha?: string
+      mergeCommitSha?: string,
     ): PullRequest => ({
       id: 123,
       number: 1,
@@ -44,8 +44,8 @@ describe("branchSafetyChecks", () => {
         repo: {
           name: "test-repo",
           owner: { login: "user" },
-          fork: false
-        }
+          fork: false,
+        },
       },
       base: {
         label: "user:main",
@@ -54,10 +54,10 @@ describe("branchSafetyChecks", () => {
         repo: {
           name: "test-repo",
           owner: { login: "user" },
-          fork: false
-        }
+          fork: false,
+        },
       },
-      merge_commit_sha: mergeCommitSha || null
+      merge_commit_sha: mergeCommitSha || null,
     });
 
     describe("current branch checks", () => {
@@ -69,7 +69,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "current branch"
+          reason: "current branch",
         });
       });
 
@@ -81,7 +81,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "current branch"
+          reason: "current branch",
         });
       });
     });
@@ -94,7 +94,7 @@ describe("branchSafetyChecks", () => {
         "dev",
         "staging",
         "production",
-        "prod"
+        "prod",
       ];
 
       protectedBranches.forEach(branchName => {
@@ -106,7 +106,7 @@ describe("branchSafetyChecks", () => {
 
           expect(result).toEqual({
             safe: false,
-            reason: "protected branch"
+            reason: "protected branch",
           });
         });
 
@@ -118,7 +118,7 @@ describe("branchSafetyChecks", () => {
 
           expect(result).toEqual({
             safe: false,
-            reason: "protected branch"
+            reason: "protected branch",
           });
         });
       });
@@ -143,7 +143,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "SHA mismatch with PR head"
+          reason: "SHA mismatch with PR head",
         });
       });
 
@@ -156,7 +156,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "PR was not merged"
+          reason: "PR was not merged",
         });
       });
 
@@ -180,7 +180,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "2 unpushed commits"
+          reason: "2 unpushed commits",
         });
       });
 
@@ -192,7 +192,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "1 unpushed commit"
+          reason: "1 unpushed commit",
         });
       });
 
@@ -225,7 +225,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "current branch"
+          reason: "current branch",
         });
       });
 
@@ -238,7 +238,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "protected branch"
+          reason: "protected branch",
         });
       });
 
@@ -251,7 +251,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "SHA mismatch with PR head"
+          reason: "SHA mismatch with PR head",
         });
       });
 
@@ -264,7 +264,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "PR was not merged"
+          reason: "PR was not merged",
         });
       });
 
@@ -293,17 +293,17 @@ describe("branchSafetyChecks", () => {
     const createLocalBranch = (
       name: string,
       sha: string,
-      isCurrent: boolean = false
+      isCurrent: boolean = false,
     ): LocalBranch => ({
       name,
       sha,
-      isCurrent
+      isCurrent,
     });
 
     const createPullRequest = (
       headRef: string,
       headSha: string,
-      mergeCommitSha?: string
+      mergeCommitSha?: string,
     ): PullRequest => ({
       id: 123,
       number: 1,
@@ -316,8 +316,8 @@ describe("branchSafetyChecks", () => {
         repo: {
           name: "test-repo",
           owner: { login: "user" },
-          fork: false
-        }
+          fork: false,
+        },
       },
       base: {
         label: "user:main",
@@ -326,22 +326,22 @@ describe("branchSafetyChecks", () => {
         repo: {
           name: "test-repo",
           owner: { login: "user" },
-          fork: false
-        }
+          fork: false,
+        },
       },
-      merge_commit_sha: mergeCommitSha || null
+      merge_commit_sha: mergeCommitSha || null,
     });
 
     it("should filter branches with safety checks", () => {
       const branches = [
         createLocalBranch("main", "abc123", true),
         createLocalBranch("feature-1", "def456"),
-        createLocalBranch("feature-2", "ghi789")
+        createLocalBranch("feature-2", "ghi789"),
       ];
 
       const mergedPRs = new Map([
         ["feature-1", createPullRequest("feature-1", "def456", "merge-sha-1")],
-        ["feature-2", createPullRequest("feature-2", "ghi789", "merge-sha-2")]
+        ["feature-2", createPullRequest("feature-2", "ghi789", "merge-sha-2")],
       ]);
 
       mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
@@ -354,32 +354,32 @@ describe("branchSafetyChecks", () => {
       expect(result[0]).toEqual({
         branch: branches[0],
         safetyCheck: { safe: false, reason: "current branch" },
-        matchingPR: undefined
+        matchingPR: undefined,
       });
 
       // Check feature-1 (safe)
       expect(result[1]).toEqual({
         branch: branches[1],
         safetyCheck: { safe: true },
-        matchingPR: mergedPRs.get("feature-1")
+        matchingPR: mergedPRs.get("feature-1"),
       });
 
       // Check feature-2 (safe)
       expect(result[2]).toEqual({
         branch: branches[2],
         safetyCheck: { safe: true },
-        matchingPR: mergedPRs.get("feature-2")
+        matchingPR: mergedPRs.get("feature-2"),
       });
     });
 
     it("should handle branches without matching PRs", () => {
       const branches = [
         createLocalBranch("feature-1", "def456"),
-        createLocalBranch("feature-2", "ghi789")
+        createLocalBranch("feature-2", "ghi789"),
       ];
 
       const mergedPRs = new Map([
-        ["feature-1", createPullRequest("feature-1", "def456", "merge-sha-1")]
+        ["feature-1", createPullRequest("feature-1", "def456", "merge-sha-1")],
       ]);
 
       mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
@@ -392,14 +392,14 @@ describe("branchSafetyChecks", () => {
       expect(result[0]).toEqual({
         branch: branches[0],
         safetyCheck: { safe: true },
-        matchingPR: mergedPRs.get("feature-1")
+        matchingPR: mergedPRs.get("feature-1"),
       });
 
       // Check feature-2 (no PR)
       expect(result[1]).toEqual({
         branch: branches[1],
         safetyCheck: { safe: true },
-        matchingPR: undefined
+        matchingPR: undefined,
       });
     });
 
@@ -411,7 +411,7 @@ describe("branchSafetyChecks", () => {
 
     it("should handle empty merged PRs map", () => {
       const branches = [
-        createLocalBranch("feature-1", "def456")
+        createLocalBranch("feature-1", "def456"),
       ];
 
       mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
@@ -422,7 +422,7 @@ describe("branchSafetyChecks", () => {
       expect(result[0]).toEqual({
         branch: branches[0],
         safetyCheck: { safe: true },
-        matchingPR: undefined
+        matchingPR: undefined,
       });
     });
 
@@ -431,18 +431,18 @@ describe("branchSafetyChecks", () => {
         createLocalBranch("main", "abc123"),
         createLocalBranch("develop", "def456"),
         createLocalBranch("feature-safe", "ghi789"),
-        createLocalBranch("feature-unpushed", "jkl012")
+        createLocalBranch("feature-unpushed", "jkl012"),
       ];
 
       const mergedPRs = new Map([
         [
           "feature-safe",
-          createPullRequest("feature-safe", "ghi789", "merge-sha")
+          createPullRequest("feature-safe", "ghi789", "merge-sha"),
         ],
         [
           "feature-unpushed",
-          createPullRequest("feature-unpushed", "jkl012", "merge-sha")
-        ]
+          createPullRequest("feature-unpushed", "jkl012", "merge-sha"),
+        ],
       ]);
 
       mockedGetBranchStatus.mockImplementation((branchName) => {
@@ -459,13 +459,13 @@ describe("branchSafetyChecks", () => {
       // main - protected
       expect(result[0].safetyCheck).toEqual({
         safe: false,
-        reason: "protected branch"
+        reason: "protected branch",
       });
 
       // develop - protected
       expect(result[1].safetyCheck).toEqual({
         safe: false,
-        reason: "protected branch"
+        reason: "protected branch",
       });
 
       // feature-safe - safe
@@ -474,14 +474,14 @@ describe("branchSafetyChecks", () => {
       // feature-unpushed - has unpushed commits
       expect(result[3].safetyCheck).toEqual({
         safe: false,
-        reason: "3 unpushed commits"
+        reason: "3 unpushed commits",
       });
     });
 
     it("should call getBranchStatus for each branch", () => {
       const branches = [
         createLocalBranch("feature-1", "def456"),
-        createLocalBranch("feature-2", "ghi789")
+        createLocalBranch("feature-2", "ghi789"),
       ];
 
       mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
@@ -498,11 +498,11 @@ describe("branchSafetyChecks", () => {
     const createLocalBranch = (
       name: string,
       sha: string,
-      isCurrent: boolean = false
+      isCurrent: boolean = false,
     ): LocalBranch => ({
       name,
       sha,
-      isCurrent
+      isCurrent,
     });
 
     beforeEach(() => {
@@ -513,21 +513,21 @@ describe("branchSafetyChecks", () => {
       it("should use custom protected branch list", () => {
         const branch = createLocalBranch("custom-protected", "abc123");
         const config: GhoulsConfig = {
-          protectedBranches: ["main", "custom-protected"]
+          protectedBranches: ["main", "custom-protected"],
         };
 
         const result = isBranchSafeToDelete(branch, "main", undefined, config);
 
         expect(result).toEqual({
           safe: false,
-          reason: "protected branch"
+          reason: "protected branch",
         });
       });
 
       it("should not protect default branches when custom list provided", () => {
         const branch = createLocalBranch("develop", "abc123"); // normally protected
         const config: GhoulsConfig = {
-          protectedBranches: ["main", "staging"] // develop not included
+          protectedBranches: ["main", "staging"], // develop not included
         };
 
         const result = isBranchSafeToDelete(branch, "main", undefined, config);
@@ -538,14 +538,14 @@ describe("branchSafetyChecks", () => {
       it("should be case-insensitive for custom protected branches", () => {
         const branch = createLocalBranch("CUSTOM-PROTECTED", "abc123");
         const config: GhoulsConfig = {
-          protectedBranches: ["main", "custom-protected"]
+          protectedBranches: ["main", "custom-protected"],
         };
 
         const result = isBranchSafeToDelete(branch, "main", undefined, config);
 
         expect(result).toEqual({
           safe: false,
-          reason: "protected branch"
+          reason: "protected branch",
         });
       });
     });
@@ -555,10 +555,10 @@ describe("branchSafetyChecks", () => {
         const branches = [
           createLocalBranch("custom-protected", "abc123"),
           createLocalBranch("release/v1.0.0", "def456"),
-          createLocalBranch("safe-branch", "ghi789")
+          createLocalBranch("safe-branch", "ghi789"),
         ];
         const config: GhoulsConfig = {
-          protectedBranches: ["custom-protected"]
+          protectedBranches: ["custom-protected"],
         };
 
         mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
@@ -568,7 +568,7 @@ describe("branchSafetyChecks", () => {
         expect(result).toHaveLength(3);
         expect(result[0].safetyCheck).toEqual({
           safe: false,
-          reason: "protected branch"
+          reason: "protected branch",
         });
 
         expect(result[2].safetyCheck).toEqual({ safe: true });
@@ -577,7 +577,7 @@ describe("branchSafetyChecks", () => {
       it("should work without configuration (backward compatibility)", () => {
         const branches = [
           createLocalBranch("main", "abc123"),
-          createLocalBranch("feature-branch", "def456")
+          createLocalBranch("feature-branch", "def456"),
         ];
 
         mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
@@ -587,7 +587,7 @@ describe("branchSafetyChecks", () => {
         expect(result).toHaveLength(2);
         expect(result[0].safetyCheck).toEqual({
           safe: false,
-          reason: "protected branch"
+          reason: "protected branch",
         });
         expect(result[1].safetyCheck).toEqual({ safe: true });
       });
@@ -598,39 +598,39 @@ describe("branchSafetyChecks", () => {
         // Test that current branch check still has highest precedence
         const branch = createLocalBranch("custom-protected", "abc123", true);
         const config: GhoulsConfig = {
-          protectedBranches: ["custom-protected"]
+          protectedBranches: ["custom-protected"],
         };
 
         const result = isBranchSafeToDelete(
           branch,
           "custom-protected",
           undefined,
-          config
+          config,
         );
 
         expect(result).toEqual({
           safe: false,
-          reason: "current branch"
+          reason: "current branch",
         });
       });
 
       it("should check protected branches before patterns", () => {
         const branch = createLocalBranch("main", "abc123");
         const config: GhoulsConfig = {
-          protectedBranches: ["main"]
+          protectedBranches: ["main"],
         };
 
         const result = isBranchSafeToDelete(
           branch,
           "develop",
           undefined,
-          config
+          config,
         );
 
         // Should use protected branch reason, not pattern or custom rule
         expect(result).toEqual({
           safe: false,
-          reason: "protected branch"
+          reason: "protected branch",
         });
       });
     });

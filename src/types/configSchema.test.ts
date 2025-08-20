@@ -10,7 +10,7 @@ describe("configSchema", () => {
 
     it("should validate valid safety config", () => {
       const config = {
-        protectedBranches: ["main", "develop"]
+        protectedBranches: ["main", "develop"],
       };
 
       const result = ghoulsConfigSchema.safeParse(config);
@@ -22,7 +22,7 @@ describe("configSchema", () => {
 
     it("should reject invalid protectedBranches", () => {
       const config = {
-        protectedBranches: "not-an-array"
+        protectedBranches: "not-an-array",
       };
 
       const result = ghoulsConfigSchema.safeParse(config);
@@ -31,7 +31,7 @@ describe("configSchema", () => {
 
     it("should reject empty strings in protectedBranches", () => {
       const config = {
-        protectedBranches: ["main", "", "develop"]
+        protectedBranches: ["main", "", "develop"],
       };
 
       const result = ghoulsConfigSchema.safeParse(config);
@@ -42,7 +42,7 @@ describe("configSchema", () => {
   describe("validateConfigWithZod", () => {
     it("should return success for valid config", () => {
       const config = {
-        protectedBranches: ["main"]
+        protectedBranches: ["main"],
       };
 
       const result = validateConfigWithZod(config);
@@ -54,7 +54,7 @@ describe("configSchema", () => {
 
     it("should return errors for invalid config", () => {
       const config = {
-        protectedBranches: "invalid"
+        protectedBranches: "invalid",
       };
 
       const result = validateConfigWithZod(config);

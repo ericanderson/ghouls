@@ -3,7 +3,7 @@ import { execaSync } from "execa";
 export function getGhUsername(): string | null {
   const result = execaSync("gh", ["api", "user", "--jq", ".login"], {
     timeout: 10000, // 10 second timeout
-    reject: false
+    reject: false,
   });
 
   // Check if the command failed

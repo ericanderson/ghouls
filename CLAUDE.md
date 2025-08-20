@@ -3,22 +3,26 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
+
 Ghouls is a GitHub CLI tool for cleaning up pull request branches. It identifies and deletes both remote and local branches that have been merged but not cleaned up.
 
 ## Development Commands
 
 ### Build
+
 ```bash
 pnpm compile  # Compiles TypeScript to JavaScript in lib/ directory
 ```
 
 ### Installation
+
 ```bash
 pnpm add -g ghouls  # Install globally
 pnpm install        # Install dependencies
 ```
 
 ### Testing
+
 The project uses Vitest for comprehensive unit testing.
 
 ```bash
@@ -28,7 +32,9 @@ pnpm test:coverage  # Generate coverage reports
 ```
 
 ### TypeScript Compiler
+
 The project uses strict TypeScript configuration with:
+
 - Target: ES2022
 - Module: ES2022
 - Output directory: `./lib`
@@ -76,9 +82,11 @@ The project uses strict TypeScript configuration with:
    - `getGitRemote.ts`: Git remote URL parsing and repository detection
 
 ### Authentication
+
 Ghouls uses GitHub CLI authentication exclusively. Users must have the GitHub CLI (`gh`) installed and authenticated with `gh auth login`. The tool automatically uses the existing GitHub CLI authentication credentials.
 
 ### Command Usage
+
 ```bash
 # Remote branch cleanup
 ghouls remote [--dry-run] [owner/repo]
@@ -97,6 +105,7 @@ All commands support repository auto-detection from git remotes when run within 
 **Important: YOU MUST USE subagents when available for the task.**
 
 ### Technology Stack Detected
+
 - Language: TypeScript with strict type checking (ES2022 target)
 - Runtime: Node.js (>=18.0.0)
 - CLI Framework: yargs for command-line interface
@@ -107,10 +116,10 @@ All commands support repository auto-detection from git remotes when run within 
 
 ### AI Team Assignments
 
-| Task | Agent | Notes |
-|------|-------|-------|
-| Code reviews and quality assurance | code-reviewer | Required for all PRs and feature changes |
-| Performance optimization and profiling | performance-optimizer | Essential for CLI tool responsiveness |
-| Backend development and API integration | backend-developer | Handles GitHub API integration and CLI logic |
-| API design and GitHub integration specs | api-architect | Designs interfaces for GitHub API wrapper |
-| Documentation updates and maintenance | documentation-specialist | Maintains README, API docs, and user guides |
+| Task                                    | Agent                    | Notes                                        |
+| --------------------------------------- | ------------------------ | -------------------------------------------- |
+| Code reviews and quality assurance      | code-reviewer            | Required for all PRs and feature changes     |
+| Performance optimization and profiling  | performance-optimizer    | Essential for CLI tool responsiveness        |
+| Backend development and API integration | backend-developer        | Handles GitHub API integration and CLI logic |
+| API design and GitHub integration specs | api-architect            | Designs interfaces for GitHub API wrapper    |
+| Documentation updates and maintenance   | documentation-specialist | Maintains README, API docs, and user guides  |

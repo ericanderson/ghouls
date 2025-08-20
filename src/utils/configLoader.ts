@@ -18,7 +18,7 @@ export class ConfigLoadError extends Error {
     message: string,
     public readonly path: string,
     public readonly cause?: Error,
-    public readonly validationErrors?: string[]
+    public readonly validationErrors?: string[],
   ) {
     super(message);
     this.name = "ConfigLoadError";
@@ -45,11 +45,9 @@ function loadConfigFile(configPath: string): GhoulsConfig {
       parsedJson = JSON.parse(content);
     } catch (jsonError) {
       throw new ConfigLoadError(
-        `Invalid JSON in configuration file: ${
-          jsonError instanceof Error ? jsonError.message : String(jsonError)
-        }`,
+        `Invalid JSON in configuration file: ${jsonError instanceof Error ? jsonError.message : String(jsonError)}`,
         configPath,
-        jsonError instanceof Error ? jsonError : undefined
+        jsonError instanceof Error ? jsonError : undefined,
       );
     }
 
@@ -61,7 +59,7 @@ function loadConfigFile(configPath: string): GhoulsConfig {
         `Configuration validation failed: ${validationResult.errors.join(", ")}`,
         configPath,
         undefined,
-        validationResult.errors
+        validationResult.errors,
       );
     }
 
@@ -73,7 +71,7 @@ function loadConfigFile(configPath: string): GhoulsConfig {
     throw new ConfigLoadError(
       `Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`,
       configPath,
-      error instanceof Error ? error : undefined
+      error instanceof Error ? error : undefined,
     );
   }
 }
@@ -130,7 +128,7 @@ export function loadConfig(): GhoulsConfig {
         errors.push(error);
       } else {
         errors.push(
-          new ConfigLoadError(`Unexpected error loading config: ${String(error)}`, configPath)
+          new ConfigLoadError(`Unexpected error loading config: ${String(error)}`, configPath),
         );
       }
     }
@@ -147,7 +145,7 @@ export function loadConfig(): GhoulsConfig {
         }`,
         firstError.path,
         firstError.cause,
-        firstError.validationErrors
+        firstError.validationErrors,
       );
     }
     throw firstError;
@@ -162,7 +160,7 @@ export function loadConfig(): GhoulsConfig {
  * Returns undefined if no config found or on error (with optional error logging)
  */
 export function loadConfigSafe(
-  logErrors: boolean = false
+  logErrors: boolean = false,
 ): GhoulsConfig | undefined {
   try {
     const config = loadConfig();

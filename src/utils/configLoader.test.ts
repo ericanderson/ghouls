@@ -56,7 +56,7 @@ describe("configLoader", () => {
       process.env.GHOULS_CONFIG = "/custom/config.json";
 
       const mockConfig: GhoulsConfig = {
-        protectedBranches: ["main", "custom"]
+        protectedBranches: ["main", "custom"],
       };
 
       mockedExistsSync.mockImplementation((path) => path === "/resolved//custom/config.json");
@@ -81,7 +81,7 @@ describe("configLoader", () => {
       });
 
       const mockConfig: GhoulsConfig = {
-        protectedBranches: ["main", "develop"]
+        protectedBranches: ["main", "develop"],
       };
 
       mockedReadFileSync.mockImplementation((path) => {
@@ -111,11 +111,11 @@ describe("configLoader", () => {
 
     it("should merge multiple config files with precedence", () => {
       const envConfig: GhoulsConfig = {
-        protectedBranches: ["main", "env-branch"]
+        protectedBranches: ["main", "env-branch"],
       };
 
       const repoConfig: GhoulsConfig = {
-        protectedBranches: ["main", "repo-branch"] // Should be overridden by env
+        protectedBranches: ["main", "repo-branch"], // Should be overridden by env
       };
 
       process.env.GHOULS_CONFIG = "/env/config.json";
@@ -143,7 +143,7 @@ describe("configLoader", () => {
 
       // Environment config should take precedence
       expect(result).toEqual({
-        protectedBranches: ["main", "env-branch"] // From env config
+        protectedBranches: ["main", "env-branch"], // From env config
       });
     });
 
@@ -158,7 +158,7 @@ describe("configLoader", () => {
     it("should throw ConfigLoadError for config validation failures", () => {
       mockedExistsSync.mockReturnValue(true);
       mockedReadFileSync.mockReturnValue(JSON.stringify({
-        protectedBranches: "invalid-type"
+        protectedBranches: "invalid-type",
       }));
 
       expect(() => loadConfig()).toThrow(ConfigLoadError);
@@ -168,7 +168,7 @@ describe("configLoader", () => {
     it("should throw ConfigLoadError with detailed validation errors", () => {
       mockedExistsSync.mockReturnValue(true);
       mockedReadFileSync.mockReturnValue(JSON.stringify({
-        protectedBranches: ["", "valid"]
+        protectedBranches: ["", "valid"],
       }));
 
       try {
@@ -180,7 +180,7 @@ describe("configLoader", () => {
         expect(configError.validationErrors).toBeDefined();
         expect(configError.validationErrors?.length).toBeGreaterThan(0);
         expect(configError.message).toContain(
-          "Configuration validation failed"
+          "Configuration validation failed",
         );
       }
     });
@@ -226,7 +226,7 @@ describe("configLoader", () => {
 
     it("should return config when loading succeeds", () => {
       const mockConfig: GhoulsConfig = {
-        protectedBranches: ["main"]
+        protectedBranches: ["main"],
       };
 
       mockedExistsSync.mockReturnValue(true);
@@ -248,7 +248,7 @@ describe("configLoader", () => {
 
       expect(result).toBeUndefined();
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Warning: Failed to load configuration")
+        expect.stringContaining("Warning: Failed to load configuration"),
       );
 
       consoleSpy.mockRestore();
@@ -259,14 +259,14 @@ describe("configLoader", () => {
 
       mockedExistsSync.mockReturnValue(true);
       mockedReadFileSync.mockReturnValue(JSON.stringify({
-        protectedBranches: 123
+        protectedBranches: 123,
       }));
 
       const result = loadConfigSafe(true);
 
       expect(result).toBeUndefined();
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Configuration validation failed")
+        expect.stringContaining("Configuration validation failed"),
       );
 
       consoleSpy.mockRestore();
@@ -321,9 +321,9 @@ describe("configLoader", () => {
             path: "/current/dir/.config/ghouls.json",
             exists: true,
             loaded: false,
-            error: expect.stringContaining("Invalid JSON")
-          }
-        ])
+            error: expect.stringContaining("Invalid JSON"),
+          },
+        ]),
       );
     });
 
@@ -364,7 +364,7 @@ describe("configLoader", () => {
         "Test message",
         "/test/path",
         undefined,
-        validationErrors
+        validationErrors,
       );
 
       expect(error.validationErrors).toEqual(validationErrors);
