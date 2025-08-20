@@ -35,6 +35,21 @@ export function isBranchSafeToDelete(
     };
   }
 
+  // Never delete release or hotfix branches (pattern-based)
+  const branchLower = branch.name.toLowerCase();
+  const releasePatterns = [
+    /^release\//, // release/v1.0.0, release/1.0, etc.
+    /^release-/, // release-1.0, release-v1.0.0, etc.
+    /^hotfix\//, // hotfix/urgent-fix, hotfix/v1.0.1, etc.
+  ];
+
+  if (releasePatterns.some(pattern => pattern.test(branchLower))) {
+    return {
+      safe: false,
+      reason: "release/hotfix branch",
+    };
+  }
+
   // If we have a matching PR, verify the SHAs match
   if (matchingPR) {
     if (branch.sha !== matchingPR.head.sha) {

@@ -156,9 +156,7 @@ class PruneLocalBranches {
       // Interactive mode
       const choices = safeBranches.map(({ branch, matchingPR }) => {
         const prInfo = matchingPR ? `PR #${matchingPR.number}` : "no PR";
-        const lastCommit = branch.lastCommitDate
-          ? new Date(branch.lastCommitDate).toLocaleDateString()
-          : "unknown";
+        const lastCommit = branch.lastCommitDate ? new Date(branch.lastCommitDate).toLocaleDateString() : "unknown";
         return {
           name: `${branch.name} (${prInfo}, last commit: ${lastCommit})`,
           value: branch.name,
@@ -252,13 +250,9 @@ class PruneLocalBranches {
     // Summary
     console.log(`\nSummary:`);
     if (this.dryRun) {
-      console.log(
-        `  Would delete: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`,
-      );
+      console.log(`  Would delete: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`);
     } else {
-      console.log(
-        `  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`,
-      );
+      console.log(`  Successfully deleted: ${deletedCount} branch${deletedCount === 1 ? "" : "es"}`);
     }
 
     if (errorCount > 0) {

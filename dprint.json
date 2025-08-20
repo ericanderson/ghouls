@@ -17,7 +17,12 @@
   },
   "excludes": [
     "**/node_modules",
-    "**/*-lock.json"
+    "**/*-lock.json",
+    "pnpm-lock.yaml",
+    "coverage/**/*",
+    "lib/**/*",
+    ".claude/settings.local.json",
+    ".claude/settings.json"
   ],
   "plugins": [
     "https://plugins.dprint.dev/typescript-0.95.10.wasm",
