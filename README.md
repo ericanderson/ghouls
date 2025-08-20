@@ -261,3 +261,116 @@ pnpm test:coverage
 ```
 
 The test suite includes comprehensive unit tests covering all core functionality, utilities, and edge cases.
+
+# Configuration
+
+Ghouls supports optional configuration to customize which branches are protected from deletion.
+
+## Configuration File Locations
+
+Ghouls looks for configuration files in the following order (first found takes precedence):
+
+1. **Environment variable**: `GHOULS_CONFIG=/path/to/config.json`
+2. **Repository root**: `.config/ghouls.json`
+3. **User home**: `~/.config/ghouls/config.json`
+
+## Configuration Format
+
+```json
+{
+  "protectedBranches": ["main", "master", "production"]
+}
+```
+
+## Configuration Options
+
+### `protectedBranches` (optional array of strings)
+
+List of branch names and patterns that should never be deleted (case-insensitive). Supports both exact branch names and glob patterns (e.g., `"release/*"`, `"hotfix-*"`).
+
+**Default protected branches**: `["main", "master", "develop", "dev", "staging", "production", "prod", "release/*", "release-*", "hotfix/*"]`
+
+### Extending vs Replacing Default Protection
+
+You can either **replace** the default protected branches entirely, or **extend** them with additional custom branches using the `$GHOULS_DEFAULT` placeholder.
+
+#### Replace (Default Behavior)
+
+When you specify `protectedBranches` without the `$GHOULS_DEFAULT` placeholder, your configuration completely replaces the default protected branches:
+
+```json
+{
+  "protectedBranches": ["main", "production"]
+}
+```
+
+This will **only** protect `main` and `production` branches, ignoring all other default protections.
+
+#### Extend with `$GHOULS_DEFAULT`
+
+To keep all the default protected branches and add your own custom ones, use the `$GHOULS_DEFAULT` placeholder:
+
+```json
+{
+  "protectedBranches": ["$GHOULS_DEFAULT", "custom-branch", "feature-*"]
+}
+```
+
+The `$GHOULS_DEFAULT` placeholder gets expanded to include all default protected branches. You can position it anywhere in the array:
+
+```json
+{
+  "protectedBranches": ["urgent-*", "$GHOULS_DEFAULT", "experimental"]
+}
+```
+
+This approach is similar to Turborepo's `$TURBO_DEFAULT$` syntax and allows you to extend rather than replace the defaults.
+
+### Benefits of Using `$GHOULS_DEFAULT`
+
+- **Future-proof**: Automatically includes new default protections added in future Ghouls versions
+- **Safer**: Reduces risk of accidentally removing important default protections
+- **Cleaner**: Avoids duplicating the full list of default branches in your config
+- **Flexible**: Can be positioned anywhere in your array for custom ordering
+
+## Examples
+
+### Replace with custom branches only
+
+```json
+{
+  "protectedBranches": ["main", "production", "staging"]
+}
+```
+
+### Extend defaults with custom branches
+
+```json
+{
+  "protectedBranches": ["$GHOULS_DEFAULT", "custom-branch", "feature-*"]
+}
+```
+
+### Custom branches with defaults at the end
+
+```json
+{
+  "protectedBranches": ["urgent-*", "experimental", "$GHOULS_DEFAULT"]
+}
+```
+
+### Minimal protection (main branch only)
+
+```json
+{
+  "protectedBranches": ["main"]
+}
+```
+
+### Use only defaults (explicit)
+
+```json
+{
+  "protectedBranches": ["$GHOULS_DEFAULT"]
+}
+```

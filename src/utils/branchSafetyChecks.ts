@@ -1,3 +1,6 @@
+import micromatch from "micromatch";
+import { getEffectiveConfig } from "../config/getEffectiveConfig.js";
+import { GhoulsConfig } from "../config/GhoulsConfig.js";
 import { PullRequest } from "../OctokitPlus.js";
 import { getBranchStatus, LocalBranch } from "./localGitOperations.js";
 
@@ -13,7 +16,9 @@ export function isBranchSafeToDelete(
   branch: LocalBranch,
   currentBranch: string,
   matchingPR?: PullRequest,
+  config?: GhoulsConfig,
 ): SafetyCheckResult {
+  const effectiveConfig = getEffectiveConfig(config);
   // Never delete the current branch
   if (branch.isCurrent || branch.name === currentBranch) {
     return {
@@ -22,27 +27,12 @@ export function isBranchSafeToDelete(
     };
   }
 
-  // Never delete main/master/develop branches
-  const protectedBranches = ["main", "master", "develop", "dev", "staging", "production", "prod"];
-  if (protectedBranches.includes(branch.name.toLowerCase())) {
+  // Check protected branch names and patterns (case-insensitive)
+  const protectedPatterns = effectiveConfig.protectedBranches;
+  if (micromatch.isMatch(branch.name, protectedPatterns, { nocase: true })) {
     return {
       safe: false,
       reason: "protected branch",
-    };
-  }
-
-  // Never delete release or hotfix branches (pattern-based)
-  const branchLower = branch.name.toLowerCase();
-  const releasePatterns = [
-    /^release\//,          // release/v1.0.0, release/1.0, etc.
-    /^release-/,           // release-1.0, release-v1.0.0, etc.
-    /^hotfix\//,           // hotfix/urgent-fix, hotfix/v1.0.1, etc.
-  ];
-  
-  if (releasePatterns.some(pattern => pattern.test(branchLower))) {
-    return {
-      safe: false,
-      reason: "release/hotfix branch"
     };
   }
 
@@ -55,7 +45,7 @@ export function isBranchSafeToDelete(
       };
     }
 
-    // Additional check: ensure the PR was actually merged
+    // Additional check: ensure the PR was actually merged (if required)
     if (!matchingPR.merge_commit_sha) {
       return {
         safe: false,
@@ -64,7 +54,6 @@ export function isBranchSafeToDelete(
     }
   }
 
-  // Check for unpushed commits
   const branchStatus = getBranchStatus(branch.name);
   if (branchStatus && branchStatus.ahead > 0) {
     return {
@@ -83,10 +72,11 @@ export function filterSafeBranches(
   branches: LocalBranch[],
   currentBranch: string,
   mergedPRs: Map<string, PullRequest> = new Map(),
+  config?: GhoulsConfig,
 ): Array<{ branch: LocalBranch; safetyCheck: SafetyCheckResult; matchingPR?: PullRequest }> {
   return branches.map(branch => {
     const matchingPR = mergedPRs.get(branch.name);
-    const safetyCheck = isBranchSafeToDelete(branch, currentBranch, matchingPR);
+    const safetyCheck = isBranchSafeToDelete(branch, currentBranch, matchingPR, config);
 
     return {
       branch,
