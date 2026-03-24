@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0"
   },
   "exports": {},
   "scripts": {
@@ -47,7 +47,7 @@
     "husky": "^9.1.7",
     "knip": "^5.62.0",
     "lint-staged": "^16.1.5",
-    "semantic-release": "^24.2.7",
+    "semantic-release": "^25.0.3",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
