@@ -53,7 +53,8 @@
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
-    "tag": "next"
+    "tag": "next",
+    "provenance": true
   },
   "repository": {
     "type": "git",

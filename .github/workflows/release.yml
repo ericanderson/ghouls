@@ -1,24 +1,24 @@
-name: CI
+name: Release
 
 on:
   push:
     branches: [master, main]
-  pull_request:
-    branches: [master, main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18, 20]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -26,10 +26,10 @@ jobs:
           version: latest
           run_install: false
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: "pnpm"
 
       - name: Get pnpm store directory
@@ -51,10 +51,7 @@ jobs:
       - name: Build TypeScript
         run: pnpm run compile
 
-      - name: Check for build artifacts
-        run: |
-          if [ ! -d "lib" ]; then
-            echo "Build failed: lib directory not found"
-            exit 1
-          fi
-          echo "Build successful: lib directory created with $(find lib -name '*.js' | wc -l) JavaScript files"
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm run semantic-release
