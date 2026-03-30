@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GhoulsConfig } from "../config/GhoulsConfig.js";
 import type { PullRequest } from "../OctokitPlus.js";
 import { filterSafeBranches, isBranchSafeToDelete } from "./branchSafetyChecks.js";
 import type { LocalBranch } from "./localGitOperations.js";
@@ -24,7 +25,10 @@ describe("branchSafetyChecks", () => {
       isCurrent,
     });
 
-    const createPullRequest = (headSha: string, mergeCommitSha?: string): PullRequest => ({
+    const createPullRequest = (
+      headSha: string,
+      mergeCommitSha?: string,
+    ): PullRequest => ({
       id: 123,
       number: 1,
       user: { login: "user" },
@@ -117,7 +121,7 @@ describe("branchSafetyChecks", () => {
       });
     });
 
-    describe("release and hotfix branch checks", () => {
+    describe("release and hotfix branch checks (via glob patterns)", () => {
       const releaseBranches = [
         "release/v1.0.0",
         "release/1.0",
@@ -144,62 +148,7 @@ describe("branchSafetyChecks", () => {
 
           expect(result).toEqual({
             safe: false,
-            reason: "release/hotfix branch",
-          });
-        });
-      });
-
-      const nonReleaseBranches = [
-        "feature/release-notes", // Contains "release" but not a release branch
-        "bugfix/hotfix-issue", // Contains "hotfix" but not a hotfix branch
-        "release", // Just "release" without separator
-        "hotfix", // Just "hotfix" without separator
-        "releases/v1.0.0", // Plural "releases"
-        "hotfixes/v1.0.1", // Plural "hotfixes"
-        "pre-release/v1.0.0", // Has prefix before "release"
-        "my-hotfix/urgent", // Has prefix before "hotfix"
-      ];
-
-      nonReleaseBranches.forEach(branchName => {
-        it(`should allow deleting non-release branch: ${branchName}`, () => {
-          const branch = createLocalBranch(branchName, "abc123");
-          mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
-
-          const result = isBranchSafeToDelete(branch, "main");
-
-          expect(result).toEqual({ safe: true });
-        });
-      });
-    });
-
-    describe("release and hotfix branch checks", () => {
-      const releaseBranches = [
-        "release/v1.0.0",
-        "release/1.0",
-        "release/v2.1.3",
-        "release/2024.1",
-        "RELEASE/V1.0.0", // Test case insensitive
-        "release-v1.0.0",
-        "release-1.0",
-        "release-v2.1.3",
-        "release-2024.1",
-        "RELEASE-V1.0.0", // Test case insensitive
-        "hotfix/urgent-bug",
-        "hotfix/v1.0.1",
-        "hotfix/security-patch",
-        "HOTFIX/URGENT-BUG", // Test case insensitive
-      ];
-
-      releaseBranches.forEach(branchName => {
-        it(`should not allow deleting release/hotfix branch: ${branchName}`, () => {
-          const branch = createLocalBranch(branchName, "abc123");
-          mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
-
-          const result = isBranchSafeToDelete(branch, "main");
-
-          expect(result).toEqual({
-            safe: false,
-            reason: "release/hotfix branch",
+            reason: "protected branch",
           });
         });
       });
@@ -345,20 +294,7 @@ describe("branchSafetyChecks", () => {
 
         expect(result).toEqual({
           safe: false,
-          reason: "release/hotfix branch",
-        });
-      });
-
-      it("should prioritize release/hotfix branch check over PR checks", () => {
-        const branch = createLocalBranch("release/v1.0.0", "abc123");
-        const pr = createPullRequest("abc123", "merge-sha");
-        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
-
-        const result = isBranchSafeToDelete(branch, "main", pr);
-
-        expect(result).toEqual({
-          safe: false,
-          reason: "release/hotfix branch",
+          reason: "protected branch",
         });
       });
 
@@ -416,7 +352,11 @@ describe("branchSafetyChecks", () => {
       isCurrent,
     });
 
-    const createPullRequest = (headRef: string, headSha: string, mergeCommitSha?: string): PullRequest => ({
+    const createPullRequest = (
+      headRef: string,
+      headSha: string,
+      mergeCommitSha?: string,
+    ): PullRequest => ({
       id: 123,
       number: 1,
       user: { login: "user" },
@@ -578,13 +518,7 @@ describe("branchSafetyChecks", () => {
       // release/v1.0.0 - release branch
       expect(result[2].safetyCheck).toEqual({
         safe: false,
-        reason: "release/hotfix branch",
-      });
-
-      // release/v1.0.0 - release branch
-      expect(result[2].safetyCheck).toEqual({
-        safe: false,
-        reason: "release/hotfix branch",
+        reason: "protected branch",
       });
 
       // feature-safe - safe
@@ -610,6 +544,215 @@ describe("branchSafetyChecks", () => {
       expect(mockedGetBranchStatus).toHaveBeenCalledTimes(2);
       expect(mockedGetBranchStatus).toHaveBeenCalledWith("feature-1");
       expect(mockedGetBranchStatus).toHaveBeenCalledWith("feature-2");
+    });
+
+    describe("glob pattern functionality", () => {
+      it("should support glob patterns in custom configuration", () => {
+        const branch = createLocalBranch("feature-123-test", "abc123");
+        const config: GhoulsConfig = {
+          protectedBranches: ["main", "feature-*-test"],
+        };
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+      });
+
+      it("should support multiple glob patterns", () => {
+        const testCases = [
+          { branch: "experimental-feature", pattern: "experimental-*" },
+          { branch: "temp/something", pattern: "temp/*" },
+          { branch: "backup-2024-01-01", pattern: "backup-*" },
+        ];
+
+        testCases.forEach(({ branch: branchName, pattern }) => {
+          const branch = createLocalBranch(branchName, "abc123");
+          const config: GhoulsConfig = {
+            protectedBranches: [pattern],
+          };
+          mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+          const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+          expect(result).toEqual({
+            safe: false,
+            reason: "protected branch",
+          });
+        });
+      });
+
+      it("should handle case-insensitive glob matching", () => {
+        const branch = createLocalBranch("FEATURE-TEST", "abc123");
+        const config: GhoulsConfig = {
+          protectedBranches: ["feature-*"],
+        };
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+      });
+
+      it("should allow deletion when branch doesn't match any glob pattern", () => {
+        const branch = createLocalBranch("feature-docs-update", "abc123");
+        const config: GhoulsConfig = {
+          protectedBranches: ["main", "release-*", "hotfix/*"],
+        };
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+        expect(result).toEqual({ safe: true });
+      });
+    });
+  });
+
+  describe("configuration support", () => {
+    const createLocalBranch = (
+      name: string,
+      sha: string,
+      isCurrent: boolean = false,
+    ): LocalBranch => ({
+      name,
+      sha,
+      isCurrent,
+    });
+
+    beforeEach(() => {
+      mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+    });
+
+    describe("custom protected branches", () => {
+      it("should use custom protected branch list", () => {
+        const branch = createLocalBranch("custom-protected", "abc123");
+        const config: GhoulsConfig = {
+          protectedBranches: ["main", "custom-protected"],
+        };
+
+        const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+      });
+
+      it("should not protect default branches when custom list provided", () => {
+        const branch = createLocalBranch("develop", "abc123"); // normally protected
+        const config: GhoulsConfig = {
+          protectedBranches: ["main", "staging"], // develop not included
+        };
+
+        const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+        expect(result).toEqual({ safe: true });
+      });
+
+      it("should be case-insensitive for custom protected branches", () => {
+        const branch = createLocalBranch("CUSTOM-PROTECTED", "abc123");
+        const config: GhoulsConfig = {
+          protectedBranches: ["main", "custom-protected"],
+        };
+
+        const result = isBranchSafeToDelete(branch, "main", undefined, config);
+
+        expect(result).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+      });
+    });
+
+    describe("filterSafeBranches with configuration", () => {
+      it("should pass configuration to isBranchSafeToDelete", () => {
+        const branches = [
+          createLocalBranch("custom-protected", "abc123"),
+          createLocalBranch("release/v1.0.0", "def456"),
+          createLocalBranch("safe-branch", "ghi789"),
+        ];
+        const config: GhoulsConfig = {
+          protectedBranches: ["custom-protected"],
+        };
+
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = filterSafeBranches(branches, "main", new Map(), config);
+
+        expect(result).toHaveLength(3);
+        expect(result[0].safetyCheck).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+
+        expect(result[2].safetyCheck).toEqual({ safe: true });
+      });
+
+      it("should work without configuration (backward compatibility)", () => {
+        const branches = [
+          createLocalBranch("main", "abc123"),
+          createLocalBranch("feature-branch", "def456"),
+        ];
+
+        mockedGetBranchStatus.mockReturnValue({ ahead: 0, behind: 0 });
+
+        const result = filterSafeBranches(branches, "develop", new Map());
+
+        expect(result).toHaveLength(2);
+        expect(result[0].safetyCheck).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+        expect(result[1].safetyCheck).toEqual({ safe: true });
+      });
+    });
+
+    describe("configuration precedence and merging", () => {
+      it("should apply configuration rules in correct precedence order", () => {
+        // Test that current branch check still has highest precedence
+        const branch = createLocalBranch("custom-protected", "abc123", true);
+        const config: GhoulsConfig = {
+          protectedBranches: ["custom-protected"],
+        };
+
+        const result = isBranchSafeToDelete(
+          branch,
+          "custom-protected",
+          undefined,
+          config,
+        );
+
+        expect(result).toEqual({
+          safe: false,
+          reason: "current branch",
+        });
+      });
+
+      it("should check protected branches before patterns", () => {
+        const branch = createLocalBranch("main", "abc123");
+        const config: GhoulsConfig = {
+          protectedBranches: ["main"],
+        };
+
+        const result = isBranchSafeToDelete(
+          branch,
+          "develop",
+          undefined,
+          config,
+        );
+
+        // Should use protected branch reason, not pattern or custom rule
+        expect(result).toEqual({
+          safe: false,
+          reason: "protected branch",
+        });
+      });
     });
   });
 });

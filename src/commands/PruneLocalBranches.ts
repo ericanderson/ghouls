@@ -3,6 +3,7 @@ import ProgressBar from "progress";
 import type { CommandModule } from "yargs";
 import { OctokitPlus, PullRequest } from "../OctokitPlus.js";
 import { filterSafeBranches } from "../utils/branchSafetyChecks.js";
+import { loadConfigSafe } from "../utils/configLoader.js";
 import { createOctokitPlus } from "../utils/createOctokitPlus.js";
 import { getGitRemote } from "../utils/getGitRemote.js";
 import { deleteLocalBranch, getCurrentBranch, getLocalBranches, isGitRepository } from "../utils/localGitOperations.js";
@@ -102,6 +103,9 @@ class PruneLocalBranches {
   public async perform() {
     console.log(`\nScanning for local branches that can be safely deleted...`);
 
+    // Load configuration
+    const config = loadConfigSafe(true); // Log errors if config loading fails
+
     // Get all local branches
     const localBranches = getLocalBranches();
     const currentBranch = getCurrentBranch();
@@ -119,7 +123,12 @@ class PruneLocalBranches {
     console.log(`Found ${mergedPRs.size} merged pull requests`);
 
     // Filter branches for safety
-    const branchAnalysis = filterSafeBranches(localBranches, currentBranch, mergedPRs);
+    const branchAnalysis = filterSafeBranches(
+      localBranches,
+      currentBranch,
+      mergedPRs,
+      config,
+    );
     const safeBranches = branchAnalysis.filter(analysis => analysis.safetyCheck.safe);
     const unsafeBranches = branchAnalysis.filter(analysis => !analysis.safetyCheck.safe);
 
@@ -199,7 +208,9 @@ class PruneLocalBranches {
       const prInfo = matchingPR ? `#${matchingPR.number}` : "no PR";
 
       if (bar) {
-        bar.update(deletedCount + errorCount, { branch: `${branch.name} (${prInfo})` });
+        bar.update(deletedCount + errorCount, {
+          branch: `${branch.name} (${prInfo})`,
+        });
       }
 
       try {
